@@ -24,8 +24,6 @@ void Screen::init(int width, int height)
 
 void Screen::writePixel(glm::vec3& color, int x, int y)
 {
-    // Note: 2 - i for color location because FreeImage expects BGR despite mine giving it 
-    // different bitmask data.
     for (int i = 0; i < 3; i++) {
         pixelArray[(width*y+x)*3 + 2 - i] = (Byte) (color[i]*255.0);
     }

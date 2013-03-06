@@ -17,6 +17,7 @@
 
 #include "Camera.h"
 #include "Screen.h"
+#include "Sampler.h"
 #include "Raytracer.h"
 #include "Primitive.h"
 #include "Light.h"
@@ -46,6 +47,8 @@ class Scene {
         std::vector<std::vector<int> > grid;
         AABB* mommaBox;
 
+        int samplesPerPixel;
+        SamplerType samplerType;
         int gi;
         int gidepth;
         std::vector<Primitive> primitiveList;

@@ -28,6 +28,8 @@ Scene::Scene(const char* filename) : camera(), screen()
     this->outputFilename = "screenshot.png";
     this->attenuation = vec3(1.0,0.0,0.0);
     this->ambient = vec3(0.2,0.2,0.2);
+    this->samplesPerPixel = 1;
+    this->samplerType = REGULAR;
     this->parseFile(filename);
     this->gridStart = vec3(0.0,0.0,0.0);
     this->gridEnd = vec3(10.0,10.0,10.0);
@@ -55,20 +57,26 @@ void Scene::raytrace()
 {
     camera.setWidthAndHeight(screen.getWidth(), screen.getHeight());
 
+    int numberOfPixels = screen.getWidth() * screen.getHeight();
+    float spp = (float) samplesPerPixel;
+    cout << "Samples per pixel: " << samplesPerPixel << "\n";
+
     #pragma omp parallel for
-    for (int j = 0; j < screen.getHeight(); j++) {
-        int thisIndex = -1;
+    for (int i = 0; i < numberOfPixels; i++) {
         Ray* ray = new Ray();
-        for (int i = 0; i < screen.getWidth(); i++) {
-            vec3 totalColor = vec3(0.0);
+        vec3 totalColor = vec3(0.0);
+        int x = i % screen.getWidth();
+        int y = i / screen.getWidth();
+        Sample sample;
+        Sampler sampler = Sampler(x, y, samplesPerPixel, samplerType);
+        while (sampler.hasSamples() != false) {
             vec3 color = vec3(0.0);
-            camera.generateRay(ray,i,j);
-            thisIndex = Raytracer::traceRay(this, ray, 0, color, 1.0);
-
-            totalColor = color;
-
-            screen.writePixel(totalColor,i,j);
+            sample = sampler.getSample();
+            camera.generateRay(ray,sample.x,sample.y);
+            Raytracer::traceRay(this, ray, 0, color, 1.0);
+            totalColor += color/spp;
         }
+        screen.writePixel(totalColor,x,y);
         delete ray;
     }
     screen.saveScreenshot(("testscenes/" + outputFilename).c_str());
@@ -168,6 +176,24 @@ void Scene::parseFile(const char* filename)
                     }
                 } else if (cmd == "output") {
                     s >> outputFilename;
+                } else if (cmd == "samplesperpixel") {
+                    validinput = readvals(s,1,values);
+                    if (validinput) {
+                        samplesPerPixel = values[0];
+                    }
+                } else if (cmd == "sampling") {
+                    string samplingType;
+                    s >> samplingType;
+
+                    if (samplingType.compare("regular") == 0) {
+                        samplerType = REGULAR;
+                    } else if (samplingType.compare("jittered") == 0) {
+                        samplerType = JITTERED;
+                    } else if (samplingType.compare("random") == 0) {
+                        samplerType = RANDOM;
+                    } else {
+                        cout << "Unrecognizable sampling type. Defaulting to regular\n";
+                    }
                 } 
 
                 // Geometry

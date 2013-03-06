@@ -4,6 +4,8 @@ camera 0 0 1 0 0 -1 0 1 0 45
 output scene6.bmp
 
 maxdepth 5
+samplesperpixel 16
+sampling random
 
 maxverts 12
 #planar face

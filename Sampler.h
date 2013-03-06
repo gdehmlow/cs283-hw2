@@ -5,7 +5,8 @@
     There is the option for it to be random or not. Will generate multiple samples per pixel
     (necessary for Monte Carlo path tracing) if samplesPerPixel > 1.
 
-    Restriction: if not random, samplesPerPixel must be a square number (sPP=x^2 for some x). 
+    Restriction: if samplerType is not random, samplesPerPixel must be a square number (sPP=x^2 
+    for some x), or it will be rounded to nearest square number.
 */
 
 #ifndef I_SAMPLER
@@ -16,21 +17,24 @@ typedef struct _Sample {
     float y;
 } Sample;
 
-enum SampleType { REGULAR, JITTERED, RANDOM };
+enum SamplerType { REGULAR, JITTERED, RANDOM };
 
 class Sampler {
     public:
-        void getSample(Sample* sample);
-        Sampler(int width, int height, int samplesPerPixel, SampleType t);
+        bool hasSamples();
+        Sample getSample();
+        Sampler(int x, int y, int samplesPerPixel, SamplerType t);
         ~Sampler();
 
     private:
-        float screenWidth; 
-        float screenHeight;
-        int currentX;
-        int currentY;
+        bool hasSamps;
+        int x;
+        int y;
+        int currentSubPixelCount;
+        int sqrtSamplesPerPixel;
         int samplesPerPixel;
-        bool isRandom;
+        float subPixelOffset;
+        SamplerType samplerType;
 };
 
 #endif

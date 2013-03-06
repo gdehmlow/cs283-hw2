@@ -36,10 +36,15 @@ Scene::Scene(const char* filename) : camera(), screen()
     this->gidepth = 3;
 }
 
+Scene::~Scene()
+{
+    //delete mommaBox;
+}
+
 int Scene::renderImage()
 {
     time_t begin = time(0);
-    createGrid();
+    //createGrid();
     raytrace();
     time_t end = time(0);
     cout << "Rendered '" << outputFilename << "' in " << (end - begin) << "s.\n";
@@ -49,10 +54,10 @@ int Scene::renderImage()
 void Scene::raytrace()
 {
     camera.setWidthAndHeight(screen.getWidth(), screen.getHeight());
-    int* prevRow = new int[screen.getWidth()];
+
+    #pragma omp parallel for
     for (int j = 0; j < screen.getHeight(); j++) {
         int thisIndex = -1;
-        int prevIndex = -1;
         Ray* ray = new Ray();
         for (int i = 0; i < screen.getWidth(); i++) {
             vec3 totalColor = vec3(0.0);
@@ -60,30 +65,11 @@ void Scene::raytrace()
             camera.generateRay(ray,i,j);
             thisIndex = Raytracer::traceRay(this, ray, 0, color, 1.0);
 
-            // If we encounter an edge, supersample by 16 and average
-            // Make this condition true to make it pure blind supersampling
-            if (i != 0 && (prevIndex != thisIndex) || (j != 0 && thisIndex != prevRow[i])) {
-                //std::cout << thisIndex << " vs. " << prevRow[i] << " for " << i << "," << j << "\n";
-                for (int y = 0; y < 4; y++) {
-                    for (int x = 0; x < 4; x++) {
-                        float div = 1.0f / (RAND_MAX+1.0f);
-                        float randx = (rand()*div+rand()*div*div-0.5f)/4.0f;
-                        float randy = (rand()*div+rand()*div*div-0.5f)/4.0f;
-                        camera.generateRay(ray, (i-0.5) + (float)x/4.0f,(j-0.5) + (float)y/4.0f);
-                        //camera.generateRay(ray, (i-0.5) + (float)x/4.0f+randx,(j-0.5) + (float)y/4.0f+randy);
-                        color = vec3(0.0);
-                        Raytracer::traceRay(this, ray, 0, color, 1.0);
-                        totalColor += color;
-                    }
-                }
-                totalColor /= 16.0f;
-            } else {
-                totalColor = color;
-            }
-            prevIndex = thisIndex;
-            prevRow[i] = thisIndex;
+            totalColor = color;
+
             screen.writePixel(totalColor,i,j);
         }
+        delete ray;
     }
     screen.saveScreenshot(("testscenes/" + outputFilename).c_str());
 }

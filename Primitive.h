@@ -18,6 +18,7 @@
 class Primitive {
     public:
         Primitive(Shape* shape);
+        ~Primitive();
         int intersectionPoint(Ray* ray, Intersection* intersection);
         bool doesIntersect(Ray* ray, float tmax);
         void setAmbient(glm::vec3& ambient);

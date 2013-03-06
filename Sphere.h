@@ -15,6 +15,8 @@
 class Sphere : public Shape {
     public:
         Sphere(float x, float y, float z, float radius);
+        ~Sphere();
+        
         bool doesIntersect(Ray* ray, float tmax);
         int intersectionPoint(Ray* ray, Intersection* intersection);
         void createAABB(glm::mat3& transformation);

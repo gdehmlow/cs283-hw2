@@ -14,6 +14,7 @@ typedef unsigned char Byte;
 class Screen {
     public:
         Screen();
+        ~Screen();
         void init(int width, int height);
         void writePixel(glm::vec3& color, int x, int y);
         void saveScreenshot(const char* outputFilename);

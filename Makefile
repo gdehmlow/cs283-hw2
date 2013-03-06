@@ -14,9 +14,9 @@ LDFLAGS = -L/usr/X11R6/lib -L/sw/lib -L/usr/sww/lib \
 endif
 
 RM = /bin/rm -f 
-all: raytracer
-raytracer: main.o Scene.o Camera.o Screen.o Raytracer.o Triangle.o Sphere.o Primitive.o Transform.o AABB.o
-	$(CC) $(CFLAGS) -o raytracer main.o Scene.o Camera.o Screen.o Raytracer.o Triangle.o Sphere.o Primitive.o Transform.o AABB.o $(INCFLAGS) $(LDFLAGS) 
+all: raytracer.qq
+raytracer.qq: main.o Scene.o Camera.o Screen.o Raytracer.o Triangle.o Sphere.o Primitive.o Transform.o AABB.o Sampler.o
+	$(CC) $(CFLAGS) -o raytracer.qq main.o Scene.o Camera.o Screen.o Raytracer.o Triangle.o Sphere.o Primitive.o Transform.o AABB.o Sampler.o $(INCFLAGS) $(LDFLAGS) 
 main.o: main.cpp Scene.cpp Scene.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c main.cpp
 Scene.o: Scene.cpp Scene.h Camera.h Screen.h Triangle.h Sphere.h Primitive.h
@@ -37,5 +37,7 @@ Transform.o: Transform.cpp Transform.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Transform.cpp
 AABB.o: AABB.cpp AABB.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c AABB.cpp
+Sampler.o: Sampler.cpp Sampler.h
+	$(CC) $(CFLAGS) $(INCFLAGS) -c Sampler.cpp
 clean: 
-	$(RM) *.o transforms *.png
+	$(RM) *.o raytracer.qq raytracer *.png

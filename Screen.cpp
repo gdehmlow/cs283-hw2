@@ -8,7 +8,11 @@
 
 Screen::Screen()
 {
+}
 
+Screen::~Screen()
+{
+    delete[] pixelArray;
 }
 
 void Screen::init(int width, int height)
@@ -34,6 +38,7 @@ void Screen::saveScreenshot(const char* outputFilename)
                                                  24, 0xFF0000, 0x00FF00, 0x0000FF, false);
     std::cout << "Saving screenshot: " << outputFilename << "\n";
     FreeImage_Save(FIF_PNG, img, outputFilename, 0);
+    delete img;
     FreeImage_DeInitialise();
 }
 

@@ -40,6 +40,13 @@ Triangle::Triangle(vec3& vertex0, vec3& vertex1, vec3& vertex2,
     isFace = false;
 }
 
+Triangle::~Triangle()
+{
+    //delete aabb;
+    delete[] vertexArray;
+    delete[] normalArray;
+}
+
 bool Triangle::doesIntersect(Ray* ray, float tmax)
 {
     vec3 dir = vec3(ray->direction[0],ray->direction[1],ray->direction[2]);

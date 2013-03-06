@@ -26,6 +26,7 @@ class Scene {
     public:
         friend class Raytracer;
         Scene(const char* filename);
+        ~Scene();
         int renderImage();
 
     private:

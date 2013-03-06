@@ -8,8 +8,11 @@
 Primitive::Primitive(Shape* shape)
 {
     this->shape = shape;
-    Material* tempMaterial = new Material();
-    this->material = tempMaterial;
+    this->material = new Material();
+}
+
+Primitive::~Primitive()
+{
 }
 
 int Primitive::intersectionPoint(Ray* ray, Intersection* intersection)

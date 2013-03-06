@@ -140,6 +140,7 @@ int Raytracer::traceRay(Scene* scene, Ray* ray, int depth, glm::vec3& color, flo
                 vec3 newColor = vec3(0.0,0.0,0.0);
                 traceRay(scene, newRay, ++depth, newColor, rayRIndex);
                 color = color + newColor*scene->primitiveList[mini].material->specular;
+                delete newRay;
             }
 
             // Only do refractions if material is not opaque
@@ -158,25 +159,7 @@ int Raytracer::traceRay(Scene* scene, Ray* ray, int depth, glm::vec3& color, flo
                     traceRay(scene, newRay, ++depth, newColor, scene->primitiveList[mini].material->rindex);
                     color = newColor + color*scene->primitiveList[mini].material->diffuse;
                 }
-            }
-
-            // Basic Global Illumination
-            // gi is how many random rays to fire off at a time.
-            if (depth < scene->gidepth) {
-                vec3 sumColor;
-                for (int g = 0; g < 40; g++) {
-                    float div = 1.0f / (RAND_MAX+1.0f);
-                    float z = rand()*div+rand()*div*div-0.5;
-                    float x = rand()*div+rand()*div*div-0.5;
-                    float y = rand()*div+rand()*div*div-0.5;
-                    Ray* newRay = new Ray;
-                    newRay->position = lightIntersect->position + lightIntersect->normal * 0.001;
-                    newRay->direction = glm::normalize(lightIntersect->normal+vec4(x,y,z,0));
-                    vec3 newColor = vec3(0.0,0.0,0.0);
-                    traceRay(scene, newRay, ++depth, newColor, rayRIndex);
-                    sumColor += newColor;
-                }
-                color += (sumColor/((float) 60.0f));
+                delete newRay;
             }
         }
 
@@ -184,5 +167,10 @@ int Raytracer::traceRay(Scene* scene, Ray* ray, int depth, glm::vec3& color, flo
         color = glm::clamp(color + scene->primitiveList[mini].ambient + scene->primitiveList[mini].material->emission,0.0,1.0);
     }
 
+    delete tempIntersect;
+    delete lightIntersect;
+    delete intersect;
+    delete tempRay;
+    delete shadowRay;
     return intersectPrimIndex;
 }

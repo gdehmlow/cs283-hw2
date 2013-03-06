@@ -17,6 +17,7 @@ class Triangle : public Shape {
         Triangle(glm::vec3& vertex0, glm::vec3& vertex1, glm::vec3& vertex2);
         Triangle(glm::vec3& vertex0, glm::vec3& vertex1, glm::vec3& vertex2,
                  glm::vec3& normal0, glm::vec3& normal1, glm::vec3& normal2);
+        ~Triangle();
         bool doesIntersect(Ray* ray, float tmax);
         int intersectionPoint(Ray* ray, Intersection* intersection);
         void createAABB(glm::mat3& transformation);

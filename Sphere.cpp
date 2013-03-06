@@ -17,6 +17,11 @@ Sphere::Sphere(float x, float y, float z, float radius)
     this->radius = radius;
 }
 
+Sphere::~Sphere()
+{
+    //delete aabb;
+}
+
 bool Sphere::doesIntersect(Ray* ray, float tmax)
 {
     vec3 dir = vec3(ray->direction[0],ray->direction[1],ray->direction[2]);

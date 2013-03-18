@@ -22,7 +22,6 @@ Raytracer::Raytracer(Scene* scene)
 {
     this->scene = scene;
     this->maxDepth = scene->maxDepth;    
-    srand(time(NULL));
 }
 
 Raytracer::~Raytracer()
@@ -77,7 +76,6 @@ int Raytracer::traceRay(Ray* ray, int depth, glm::vec3& color, float rayRIndex)
 
     // Lighting calculations
     if (didIntersect) {
-        srand(time(NULL));
         Primitive intersectedObject = scene->primitiveList[mini];
 
         // Move intersection from object to world space
@@ -178,7 +176,6 @@ int Raytracer::traceRay(Ray* ray, int depth, glm::vec3& color, float rayRIndex)
 // TODO: refactor this whole mess. Lots of code repetition 
 vec3 Raytracer::directLighting(Ray* ray, Intersection* lightIntersect, Primitive* intersectedObject)
 {
-    srand(time(NULL));
     vec4 L;
     vec4 V;
     std::vector<Primitive>::iterator it;
@@ -299,6 +296,7 @@ vec3 Raytracer::directLighting(Ray* ray, Intersection* lightIntersect, Primitive
                 //std::cout << "Visibility: " << visibility << "\n";
 
                 pos = lit->posdir + lit->rightStep*(float)lit->numSamples/2.0 + lit->upStep*(float)lit->numSamples/2.0;
+                pos[3] = 1.0;
 
                 L = glm::normalize(pos - lightIntersect->position);
                 shadowRay->direction = glm::normalize(pos - lightIntersect->position);

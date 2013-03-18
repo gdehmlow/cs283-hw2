@@ -19,7 +19,6 @@ Sampler::Sampler(int x, int y, int samplesPerPixel, SamplerType t)
     this->sqrtSamplesPerPixel   = static_cast<int>(sqrt(static_cast<float>(samplesPerPixel)) + .5f);
     this->samplesPerPixel       = this->sqrtSamplesPerPixel * this->sqrtSamplesPerPixel;
     this->subPixelOffset        = 0.5/((float) this->sqrtSamplesPerPixel);
-    srand(time(NULL));
 }
 
 Sampler::~Sampler()

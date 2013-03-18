@@ -10,23 +10,29 @@
 #include <algorithm>
 #include <glm/gtx/component_wise.hpp>
 #include "Raytracer.h"
-#include "Intersection.h"
-#include "Primitive.h"
 
 typedef glm::mat3 mat3;
-typedef glm::mat4 mat4; 
-typedef glm::vec3 vec3; 
-typedef glm::vec4 vec4; 
+typedef glm::mat4 mat4;
+typedef glm::vec3 vec3;
+typedef glm::vec4 vec4;
 
-int Raytracer::traceRay(Scene* scene, Ray* ray, int depth, glm::vec3& color, float rayRIndex)
+Raytracer::Raytracer(Scene* scene)
+{
+    this->scene = scene;
+    this->maxDepth = scene->maxDepth;
+}
+
+Raytracer::~Raytracer()
+{
+
+}
+
+int Raytracer::traceRay(Ray* ray, int depth, glm::vec3& color, float rayRIndex)
 {
     int intersectPrimIndex = -1;
     Ray* tempRay = new Ray;                 // Temporary ray for finding intersection
-    Ray* shadowRay = new Ray;               // Ray for finding visibility term
     std::vector<Primitive>::iterator it; 
-    std::vector<Light>::iterator lit;
 
-    // Iterators are kind of stupid IMO
     int i = 0;
     int mini = 0;
     float mint = 999999999.0;
@@ -36,12 +42,10 @@ int Raytracer::traceRay(Scene* scene, Ray* ray, int depth, glm::vec3& color, flo
     float normFlip; //
     vec3 direction;
     vec3 position;
-    vec4 L;
-    vec4 V;
     bool didIntersect = false;
     Intersection* tempIntersect = new Intersection;
+    Intersection* intersect = new Intersection;    
     Intersection* lightIntersect = new Intersection;
-    Intersection* intersect = new Intersection;
 
     // Get the closest intersection - naive
     for (it = scene->primitiveList.begin(); it < scene->primitiveList.end(); it++) {
@@ -70,67 +74,27 @@ int Raytracer::traceRay(Scene* scene, Ray* ray, int depth, glm::vec3& color, flo
 
     // Lighting calculations
     if (didIntersect) {
+        Primitive intersectedObject = scene->primitiveList[mini];
+
+        // Move intersection from object to world space
+        lightIntersect->position    = intersect->position * intersectedObject.transformation;
+        lightIntersect->normal      = glm::normalize(intersect->normal * intersectedObject.inverseTranspose);
+
         if (depth == 0) {
             intersectPrimIndex = mini;
         }
+        
+        // Direct lighting for lambertian and glossy surfaces
+        if (intersectedObject.material->type == LAMBERTIAN || intersectedObject.material->type == GLOSSY) {
+            color += directLighting(ray, lightIntersect, &intersectedObject);
 
-        // Move intersection back into world space
-        lightIntersect->position = intersect->position * scene->primitiveList[mini].transformation;
-        lightIntersect->normal = glm::normalize(intersect->normal*scene->primitiveList[mini].inverseTranspose);
-
-        // Loop through the lights to calculate summed light contribution
-        for (lit = scene->lightList.begin(); lit < scene->lightList.end(); lit++) {
-            float visibility = 1.0;
-
-            // Different ray directions depending on if it's a point or directional source.
-            if (lit->point) {
-                L = glm::normalize(lit->posdir - lightIntersect->position);
-                shadowRay->direction = glm::normalize(lit->posdir - lightIntersect->position);
-            } else {
-                L = glm::normalize(lit->posdir);
-                shadowRay->direction = glm::normalize(lit->posdir);
-            }
-
-            // Move the shadow ray away from the object a little bit
-            shadowRay->position = lightIntersect->position + 0.001 * shadowRay->direction;
-            // Don't count intersections past the light source
-            tmax = glm::length(lit->posdir - lightIntersect->position);
-
-            // Loop through each object again to see if our light ray intersects with anything
-            int k = 0;
-            for (it = scene->primitiveList.begin(); it < scene->primitiveList.end(); it++, k++) {
-                // Transform shadowRay into object space
-                tempRay->position = shadowRay->position * it->inverseTransformation;
-                tempRay->direction = shadowRay->direction * it->inverseTransformation;
-
-                if (it->doesIntersect(tempRay, tmax)) {
-                    visibility = 0.0;
-                    break;
-                }
-            }
-
-            //// Shading time! ////
-            // Diffuse term
-            float nDotL = std::max(glm::dot(lightIntersect->normal, shadowRay->direction),0.0f);
-            vec3 lambert = scene->primitiveList[mini].material->diffuse*nDotL;
-
-            // Specular term
-            V = glm::normalize(ray->position - lightIntersect->position);
-            float nDotH = std::pow(std::max(glm::dot(lightIntersect->normal, glm::normalize(L+V)),0.0f),
-                                   scene->primitiveList[mini].material->shininess); 
-            vec3 phong = scene->primitiveList[mini].material->specular*nDotH;
-
-            // Add it all together with attenuation
-            float attenuation;
-            float r;
-            r = glm::length(lit->posdir - lightIntersect->position);
-            attenuation = (1.0/(scene->attenuation[0] + scene->attenuation[1]*r + scene->attenuation[1]*r*r));
-            color += (phong + lambert)*visibility*lit->color*attenuation*scene->primitiveList[mini].material->alpha;
+            // Tack on ambient and emissive terms
+            color = glm::clamp(color + intersectedObject.ambient + intersectedObject.material->emission,0.0,1.0);
         }
 
+        // Reflections/refractions for glossy, transmissive, and reflective surfaces
         if (depth < maxDepth) {
-            // Only do reflections if material has specular component
-            if (glm::length(scene->primitiveList[mini].material->specular) > 0.0) {
+            if (intersectedObject.material->type == GLOSSY) {
                 Ray* newRay = new Ray;
                 vec4 newDirection = ray->direction;
                 newDirection[3] = 0.0;
@@ -138,17 +102,16 @@ int Raytracer::traceRay(Scene* scene, Ray* ray, int depth, glm::vec3& color, flo
                 newRay->position = lightIntersect->position + lightIntersect->normal * 0.001;
                 newRay->direction = newDirection-2*lightIntersect->normal*glm::dot(newDirection,lightIntersect->normal);
                 vec3 newColor = vec3(0.0,0.0,0.0);
-                traceRay(scene, newRay, ++depth, newColor, rayRIndex);
-                color = color + newColor*scene->primitiveList[mini].material->specular;
+                traceRay(newRay, ++depth, newColor, rayRIndex);
+                color = color + newColor*intersectedObject.material->specular;
                 delete newRay;
             }
 
-            // Only do refractions if material is not opaque
-            if (scene->primitiveList[mini].material->alpha < 1.0) {
+            if (intersectedObject.material->type == TRANSMISSIVE) {
                 Ray* newRay = new Ray;
                 vec4 newDirection = ray->direction;
                 newDirection[3] = 0.0;
-                float n = rayRIndex / scene->primitiveList[mini].material->rindex;
+                float n = rayRIndex / intersectedObject.material->rindex;
                 vec4 normal = lightIntersect->normal * normFlip;
                 float cosI = -glm::dot(normal, newDirection);
                 float cosT = 1.0 - n*n*(1.0 - cosI*cosI);
@@ -156,21 +119,93 @@ int Raytracer::traceRay(Scene* scene, Ray* ray, int depth, glm::vec3& color, flo
                     newRay->direction = n*ray->direction + (n*cosI - sqrtf(cosT))*normal;
                     newRay->position = lightIntersect->position + newRay->direction * 0.001;
                     vec3 newColor = vec3(0.0,0.0,0.0);
-                    traceRay(scene, newRay, ++depth, newColor, scene->primitiveList[mini].material->rindex);
-                    color = newColor + color*scene->primitiveList[mini].material->diffuse;
+                    traceRay(newRay, ++depth, newColor, intersectedObject.material->rindex);
+                    color = newColor + color*intersectedObject.material->diffuse;
                 }
                 delete newRay;
             }
-        }
 
-        // Tack on ambient and emissive terms
-        color = glm::clamp(color + scene->primitiveList[mini].ambient + scene->primitiveList[mini].material->emission,0.0,1.0);
+            if (intersectedObject.material->type == REFLECTIVE) {
+                Ray* newRay = new Ray;
+                vec4 newDirection = ray->direction;
+                newDirection[3] = 0.0;
+                // New ray
+                newRay->position = lightIntersect->position + lightIntersect->normal * 0.001;
+                newRay->direction = newDirection-2*lightIntersect->normal*glm::dot(newDirection,lightIntersect->normal);
+                vec3 newColor = vec3(0.0,0.0,0.0);
+                traceRay(newRay, ++depth, newColor, rayRIndex);
+                color = newColor;
+                delete newRay;
+            }
+        }
     }
 
     delete tempIntersect;
     delete lightIntersect;
     delete intersect;
     delete tempRay;
-    delete shadowRay;
     return intersectPrimIndex;
+}
+
+vec3 Raytracer::directLighting(Ray* ray, Intersection* lightIntersect, Primitive* intersectedObject)
+{
+    vec4 L;
+    vec4 V;
+    std::vector<Primitive>::iterator it;
+    std::vector<Light>::iterator lit; 
+    Ray* shadowRay = new Ray;
+    Ray* tempRay = new Ray;
+
+    vec3 color = vec3(0.0);
+
+    // Loop through the lights to calculate summed light contribution
+    for (lit = scene->lightList.begin(); lit < scene->lightList.end(); lit++) {
+        float visibility = 1.0;
+
+        // Different ray directions depending on if it's a point or directional source.
+        if (lit->point) {
+            L = glm::normalize(lit->posdir - lightIntersect->position);
+            shadowRay->direction = glm::normalize(lit->posdir - lightIntersect->position);
+        } else {
+            L = glm::normalize(lit->posdir);
+            shadowRay->direction = glm::normalize(lit->posdir);
+        }
+
+        // Move the shadow ray away from the object a little bit
+        shadowRay->position = lightIntersect->position + 0.001 * shadowRay->direction;
+        // Don't count intersections past the light source
+        float tmax = glm::length(lit->posdir - lightIntersect->position);
+
+        // Loop through each object again to see if our light ray intersects with anything
+        int k = 0;
+        for (it = scene->primitiveList.begin(); it < scene->primitiveList.end(); it++, k++) {
+            // Transform shadowRay into object space
+            tempRay->position = shadowRay->position * it->inverseTransformation;
+            tempRay->direction = shadowRay->direction * it->inverseTransformation;
+
+            if (it->doesIntersect(tempRay, tmax)) {
+                visibility = 0.0;
+                break;
+            }
+        }
+
+        // Diffuse term
+        float nDotL = std::max(glm::dot(lightIntersect->normal, shadowRay->direction),0.0f);
+        vec3 lambert = intersectedObject->material->diffuse*nDotL;
+
+        // Specular term
+        V = glm::normalize(ray->position - lightIntersect->position);
+        float nDotH = std::pow(std::max(glm::dot(lightIntersect->normal, glm::normalize(L+V)),0.0f),
+                               intersectedObject->material->shininess); 
+        vec3 phong = intersectedObject->material->specular*nDotH;
+
+        // Add it all together with attenuation
+        float attenuation;
+        float r;
+        r = glm::length(lit->posdir - lightIntersect->position);
+        attenuation = (1.0/(scene->attenuation[0] + scene->attenuation[1]*r + scene->attenuation[1]*r*r));
+        color += (phong + lambert)*visibility*lit->color*attenuation*intersectedObject->material->alpha;
+    }
+
+    return color;
 }

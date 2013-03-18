@@ -38,6 +38,7 @@ void Primitive::setMaterial(Material* material)
     this->material->shininess = material->shininess;
     this->material->alpha = material->alpha;
     this->material->rindex = material->rindex;
+    this->material->type = material->type;
 }
 
 void Primitive::setTransformation(glm::mat4& transformation)

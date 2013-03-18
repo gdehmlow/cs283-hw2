@@ -9,7 +9,10 @@
 
 #include <glm/glm.hpp>
 
+enum MaterialType { LAMBERTIAN, GLOSSY, TRANSMISSIVE, REFLECTIVE };
+
 typedef struct _Material {
+	MaterialType type;
     glm::vec3 diffuse;
     glm::vec3 specular;
     glm::vec3 emission;

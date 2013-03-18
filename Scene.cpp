@@ -21,8 +21,6 @@ typedef glm::mat4 mat4;
 
 using namespace std;
 
-int Raytracer::maxDepth = 5;
-
 Scene::Scene(const char* filename) : camera(), screen()
 {
     this->outputFilename = "screenshot.png";
@@ -30,6 +28,8 @@ Scene::Scene(const char* filename) : camera(), screen()
     this->ambient = vec3(0.2,0.2,0.2);
     this->samplesPerPixel = 1;
     this->samplerType = REGULAR;
+    this->traceType = RAY;
+    this->maxDepth = 5;
     this->parseFile(filename);
     this->gridStart = vec3(0.0,0.0,0.0);
     this->gridEnd = vec3(10.0,10.0,10.0);
@@ -59,7 +59,14 @@ void Scene::raytrace()
 
     int numberOfPixels = screen.getWidth() * screen.getHeight();
     float spp = (float) samplesPerPixel;
+    if (traceType == RAY) {
+        cout << "Raytracing\n";
+    } else if (traceType == PATH) {
+        cout << "Pathtracing\n";
+    }
     cout << "Samples per pixel: " << samplesPerPixel << "\n";
+
+    Raytracer tracer = Raytracer(this);
 
     #pragma omp parallel for
     for (int i = 0; i < numberOfPixels; i++) {
@@ -73,7 +80,7 @@ void Scene::raytrace()
             vec3 color = vec3(0.0);
             sample = sampler.getSample();
             camera.generateRay(ray,sample.x,sample.y);
-            Raytracer::traceRay(this, ray, 0, color, 1.0);
+            tracer.traceRay(ray, 0, color, 1.0);
             totalColor += color/spp;
         }
         screen.writePixel(totalColor,x,y);
@@ -142,13 +149,14 @@ void Scene::parseFile(const char* filename)
         vector<vec3> tempVerticesN;
         vector<vec3> tempNormals;
 
-        Material* tempMaterial = new Material;
-        tempMaterial->specular = vec3(0.0,0.0,0.0);
-        tempMaterial->diffuse  = vec3(0.0,0.0,0.0);
-        tempMaterial->emission = vec3(0.0,0.0,0.0);
+        Material* tempMaterial  = new Material;
+        tempMaterial->specular  = vec3(0.0,0.0,0.0);
+        tempMaterial->diffuse   = vec3(0.0,0.0,0.0);
+        tempMaterial->emission  = vec3(0.0,0.0,0.0);
         tempMaterial->shininess = 0.0;
-        tempMaterial->alpha = 1.0;
-        tempMaterial->rindex = 1.0;
+        tempMaterial->alpha     = 1.0;
+        tempMaterial->rindex    = 1.0;
+        tempMaterial->type      = LAMBERTIAN;   
 
         while (in) {
             if ((str.find_first_not_of(" \t\r\n") != string::npos) && (str[0] != '#')) {
@@ -167,7 +175,7 @@ void Scene::parseFile(const char* filename)
                 } else if (cmd == "maxdepth") {
                     validinput = readvals(s,1,values);
                     if (validinput) {
-                        Raytracer::maxDepth = values[0];
+                        this->maxDepth = values[0];
                     }
                 } else if (cmd == "camera") {
                     validinput = readvals(s,10,values);
@@ -181,16 +189,37 @@ void Scene::parseFile(const char* filename)
                     if (validinput) {
                         samplesPerPixel = values[0];
                     }
+                } else if (cmd == "tracingtype") {
+                    string traceTypes;
+                    s >> traceTypes;
+
+                    if (traceTypes.compare("ray") == 0) {
+                        this->traceType = RAY;
+                    } else if (traceTypes.compare("path") == 0) {
+                        this->traceType = PATH;
+                    } else {
+                        cout << "Unrecognizable tracing type. Defaulting to ray tracing.\n";
+                        this->traceType = RAY;
+                    }
+                } else if (cmd == "samplesperpixel") {
+                    validinput = readvals(s,1,values);
+                    if (validinput) {
+                        samplesPerPixel = values[0];
+                    }
                 } else if (cmd == "sampling") {
                     string samplingType;
                     s >> samplingType;
+                    cout << "Sampling type: ";
 
                     if (samplingType.compare("regular") == 0) {
                         samplerType = REGULAR;
+                        cout << "regular\n";
                     } else if (samplingType.compare("jittered") == 0) {
                         samplerType = JITTERED;
+                        cout << "jittered\n";
                     } else if (samplingType.compare("random") == 0) {
                         samplerType = RANDOM;
+                        cout << "random\n";
                     } else {
                         cout << "Unrecognizable sampling type. Defaulting to regular\n";
                     }
@@ -337,7 +366,22 @@ void Scene::parseFile(const char* filename)
                     if (validinput) {
                         tempMaterial->rindex = values[0];
                     }
-                } 
+                } else if (cmd == "material") {
+                    string materialType;
+                    s >> materialType;
+
+                    if (materialType.compare("lambertian") == 0) {
+                        tempMaterial->type = LAMBERTIAN;
+                    } else if (materialType.compare("glossy") == 0) {
+                        tempMaterial->type = GLOSSY;
+                    } else if (materialType.compare("transmissive") == 0) {
+                        tempMaterial->type = TRANSMISSIVE;
+                    } else if (materialType.compare("reflective") == 0) {
+                        tempMaterial->type = REFLECTIVE;
+                    } else {
+                        cout << "Unrecognizable material type. Defaulting to previous material type.\n";
+                    }
+                }
 
                 else if (cmd == "gi") {
                     validinput = readvals(s,1,values);

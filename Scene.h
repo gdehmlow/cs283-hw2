@@ -23,6 +23,8 @@
 #include "Light.h"
 #include "AABB.h"
 
+enum TraceType { RAY, PATH };
+
 class Scene {
     public:
         friend class Raytracer;
@@ -43,12 +45,13 @@ class Scene {
         glm::vec3 gridStart;
         glm::vec3 gridEnd;
         int gridSize;
-        // 3d array of int arrays used to store prims at each voxel in the grid
         std::vector<std::vector<int> > grid;
         AABB* mommaBox;
 
+        int maxDepth;
         int samplesPerPixel;
         SamplerType samplerType;
+        TraceType traceType;
         int gi;
         int gidepth;
         std::vector<Primitive> primitiveList;

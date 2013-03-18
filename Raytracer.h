@@ -10,11 +10,20 @@
 #include <glm/glm.hpp>
 class Scene;
 #include "Scene.h"
+#include "Intersection.h"
+#include "Primitive.h"
 
 class Raytracer {
     public:
-        static int maxDepth;
-        static int traceRay(Scene* scene, Ray* ray, int depth, glm::vec3& color, float rayRIndex);
+        Raytracer(Scene* scene);
+        ~Raytracer();
+
+        int traceRay(Ray* ray, int depth, glm::vec3& color, float rayRIndex);
+
+    private:
+        int maxDepth;
+        glm::vec3 directLighting(Ray* ray, Intersection* lightIntersect, Primitive* intersectedObject);
+        Scene* scene;
 };
 
 #endif

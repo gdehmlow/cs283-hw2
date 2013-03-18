@@ -1,11 +1,12 @@
 #Cornell Box
 size 640 480
 camera 0 0 1 0 0 -1 0 1 0 45
-output scene6.bmp
+output scene9.bmp
 
 maxdepth 5
-samplesperpixel 16
+samplesperpixel 1
 sampling jittered
+tracingtype path
 
 maxverts 12
 #planar face
@@ -31,6 +32,7 @@ specular 0 0 0
 shininess 1
 emission 0 0 0
 diffuse 0 0 0
+material glossy
 
 attenuation 1 0.1 0.05
 
@@ -97,6 +99,7 @@ popTransform
 #sphere
 diffuse 0.7 0.5 0.2
 specular 0.2 0.2 0.2
+material glossy
 pushTransform
 translate 0 -0.7 -1.5
 scale 0.1 0.1 0.1
@@ -106,6 +109,7 @@ popTransform
 #sphere2
 diffuse 0.7 0.5 0.2
 specular 0.2 0.2 0.2
+material transmissive
 pushTransform
 translate 0.4 -0.9 -1
 scale 0.1 0.1 0.1
@@ -115,6 +119,7 @@ popTransform
 #sphere3
 diffuse 0.7 0.5 0.2
 specular 0.2 0.2 0.2
+material reflective
 pushTransform
 translate -0.5 -0.7 -1.5
 scale 0.1 0.1 0.1
@@ -124,6 +129,7 @@ popTransform
 #sphere4
 diffuse 0.7 0.5 0.2
 specular 0.2 0.2 0.2
+material lambertian
 pushTransform
 translate 0.5 -0.5 -2
 scale 0.3 0.6 0.3
@@ -133,6 +139,7 @@ popTransform
 #cube
 diffuse 0.5 0.7 0.2
 specular 0.2 0.2 0.2
+material glossy
 pushTransform
 translate -0.25 -0.4 -1.8
 rotate 0 1 0 15

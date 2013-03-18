@@ -9,16 +9,18 @@
 
 #include <glm/glm.hpp>
 
-enum MaterialType { LAMBERTIAN, GLOSSY, TRANSMISSIVE, REFLECTIVE };
+enum MaterialType { LAMBERTIAN, GLOSSY, TRANSMISSIVE, REFLECTIVE, EMISSIVE };
 
 typedef struct _Material {
 	MaterialType type;
     glm::vec3 diffuse;
     glm::vec3 specular;
-    glm::vec3 emission;
     float shininess;
     float rindex;
     float alpha;
+
+    // Light source
+    glm::vec3 emission;
 } Material;
 
 #endif

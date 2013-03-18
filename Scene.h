@@ -24,6 +24,7 @@
 #include "AABB.h"
 
 enum TraceType { RAY, PATH };
+enum SamplingType { UNIFORM, IMPORTANCE };
 
 class Scene {
     public:
@@ -42,24 +43,28 @@ class Scene {
         Camera camera;
         Screen screen;
 
-        glm::vec3 gridStart;
-        glm::vec3 gridEnd;
-        int gridSize;
-        std::vector<std::vector<int> > grid;
-        AABB* mommaBox;
-
-        int maxDepth;
-        int samplesPerPixel;
-        SamplerType samplerType;
-        TraceType traceType;
-        int gi;
-        int gidepth;
         std::vector<Primitive> primitiveList;
         std::vector<Light> lightList;
         glm::vec3 attenuation;
         glm::vec3 ambient;
         std::string outputFilename;
         std::stack <glm::mat4> transfstack; 
+
+        // AABB related variables
+        glm::vec3 gridStart;
+        glm::vec3 gridEnd;
+        int gridSize;
+        std::vector<std::vector<int> > grid;
+        AABB* mommaBox;
+
+        // Rendering settings
+        int maxDepth;
+        int samplesPerPixel;
+        bool directLighting;
+        SamplerType samplerType;    // How we shoot rays through pixels
+        TraceType traceType;        // Raytracing or Pathtracing
+        SamplingType samplingType;  // How we weight indirect lighting rays
+
 };
 
 #endif

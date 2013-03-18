@@ -63,7 +63,8 @@ sphere 0 0 0 .4
 
 shininess 1000
 alpha 0.5
-rindex 1.5
+rindex 1.05
+material transmissive
 diffuse 0.4 0.4 0.4
 specular 0.6 0.6 0.6
 sphere .3 .3 1 .1

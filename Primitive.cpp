@@ -22,7 +22,11 @@ int Primitive::intersectionPoint(Ray* ray, Intersection* intersection)
 
 bool Primitive::doesIntersect(Ray* ray, float tmax)
 {
-    return shape->doesIntersect(ray, tmax);
+    if (this->material->type == EMISSIVE) {
+        return false;
+    } else {
+        return shape->doesIntersect(ray, tmax);
+    }
 }
 
 void Primitive::setAmbient(glm::vec3& ambient)
@@ -49,7 +53,7 @@ void Primitive::setTransformation(glm::mat4& transformation)
     for (int i = 0; i < 3; i++) {
         for (int k = 0; k < 3; k++) {
             tempTransformation[i][k] = transformation[i][k];
-            this->inverseTranspose[i][k] = this->inverseTransformation[k][i]; // time to go kill myself ._.
+            this->inverseTranspose[i][k] = this->inverseTransformation[k][i];
         }
     }
     this->shape->createAABB(tempTransformation);

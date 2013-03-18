@@ -30,12 +30,11 @@ Scene::Scene(const char* filename) : camera(), screen()
     this->samplerType = REGULAR;
     this->traceType = RAY;
     this->maxDepth = 5;
+    this->directLighting = true;
     this->parseFile(filename);
     this->gridStart = vec3(0.0,0.0,0.0);
     this->gridEnd = vec3(10.0,10.0,10.0);
     this->gridSize = 8;
-    this->gi = 8;
-    this->gidepth = 3;
 }
 
 Scene::~Scene()
@@ -68,7 +67,7 @@ void Scene::raytrace()
 
     Raytracer tracer = Raytracer(this);
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < numberOfPixels; i++) {
         Ray* ray = new Ray();
         vec3 totalColor = vec3(0.0);
@@ -163,10 +162,10 @@ void Scene::parseFile(const char* filename)
                 stringstream s(str);
                 s >> cmd; 
                 int i; 
-                float values[10];
+                float values[15];
                 bool validinput;
 
-                // Setup
+                // Settings
                 if (cmd == "size") {
                     validinput = readvals(s,2,values);
                     if (validinput) {
@@ -223,7 +222,16 @@ void Scene::parseFile(const char* filename)
                     } else {
                         cout << "Unrecognizable sampling type. Defaulting to regular\n";
                     }
-                } 
+                } else if (cmd == "lighting") {
+                    string lightingType;
+                    s >> lightingType;
+
+                    if (lightingType.compare("direct") == 0) {
+                        directLighting = true;
+                    } else if (lightingType.compare("indirect") == 0) {
+                        directLighting = false;
+                    }
+                }
 
                 // Geometry
                 else if (cmd == "sphere") {
@@ -309,7 +317,7 @@ void Scene::parseFile(const char* filename)
                         Light light;
                         light.posdir = vec4(values[0],values[1],values[2],0);
                         light.color = vec3(values[3],values[4],values[5]);
-                        light.point = false;
+                        light.type = DIRECTIONAL;
                         lightList.push_back(light);
                     }
                 } else if (cmd == "point") {
@@ -318,9 +326,61 @@ void Scene::parseFile(const char* filename)
                         Light light;
                         light.posdir = vec4(values[0],values[1],values[2],1);
                         light.color = vec3(values[3],values[4],values[5]);
-                        light.point = true;
+                        light.type = POINT;
                         lightList.push_back(light);
                     }
+                } else if (cmd == "area") { // This is different from the other light sources
+                    string lightType;       // since it will actually create geometry in space
+                    s >> lightType;
+                    if (lightType.compare("rect") == 0) {
+                        validinput = readvals(s,13,values);
+                        if (validinput) {
+                            Light light;
+                            light.posdir    = vec4(values[0],values[1],values[2],1);
+                            light.upStep    = vec4(values[3]/ (double) values[12],values[4]/ (double) values[12],values[5]/ (double) values[12],1.0);
+                            light.rightStep = vec4(values[6]/ (double) values[12],values[7]/ (double) values[12],values[8]/ (double) values[12],1.0);
+                            light.color     = vec3(values[9],values[10],values[11]);
+
+                            light.type = AREA;
+                            light.areaType = RECT;
+                            light.numSamples = values[12]; // Will actually take square of this!!
+                            lightList.push_back(light);
+
+                            vec3 vert0 = vec3(values[0],values[1],values[2]);
+                            vec3 vert1 = vert0 + vec3(values[3],values[4],values[5]);
+                            vec3 vert2 = vert0 + vec3(values[6],values[7],values[8]);
+                            vec3 vert3 = vert1 + vert2 - vert0;
+
+                            Triangle* triangle = new Triangle(vert0, vert2, vert1);
+                            Primitive prim(triangle);
+                            prim.setAmbient(ambient);
+                            vec3 emis = vec3(light.color);
+                            vec3 other = vec3(0.0);
+
+                            Material* matt = new Material();
+                            matt->specular = other;
+                            matt->diffuse = other;
+                            matt->emission = emis;
+                            matt->alpha = 0;
+                            matt->shininess = 1;
+                            matt->type = EMISSIVE;
+
+                            prim.setMaterial(matt);
+                            prim.setTransformation(transfstack.top());
+                            primitiveList.push_back(prim);
+
+                            triangle = new Triangle(vert2, vert3, vert1);
+                            Primitive prim2(triangle);
+                            prim2.setAmbient(ambient);
+                            prim2.setMaterial(matt);
+                            prim2.setTransformation(transfstack.top());
+                            primitiveList.push_back(prim2);
+                            delete matt;
+                        }
+                    } else {
+                        cout << "Unrecognizable light type: " << lightType << ", skipping.";
+                    }
+
                 } else if (cmd == "attenuation") {
                     validinput = readvals(s,3,values);
                     if (validinput) {
@@ -382,18 +442,6 @@ void Scene::parseFile(const char* filename)
                         cout << "Unrecognizable material type. Defaulting to previous material type.\n";
                     }
                 }
-
-                else if (cmd == "gi") {
-                    validinput = readvals(s,1,values);
-                    if (validinput) {
-                        this->gi = values[0];
-                    }
-                } else if (cmd == "gidepth") {
-                    validinput = readvals(s,1,values);
-                    if (validinput) {
-                        this->gidepth = values[0];
-                    }
-                } 
 
                 // Grid stuff
                 else if (cmd == "gridstart") {

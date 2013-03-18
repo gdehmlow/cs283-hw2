@@ -25,9 +25,9 @@ Camera.o: Camera.cpp Camera.h Ray.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Camera.cpp
 Screen.o: Screen.cpp Screen.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Screen.cpp
-Raytracer.o: Raytracer.cpp Raytracer.h Ray.h Scene.h
-	$(CC) $(CFLAGS) $(INCFLAGS) -c Raytracer.cpp
-Primitive.o: Primitive.cpp Primitive.h Shape.h Material.h Intersection.h
+Raytracer.o: Raytracer.cpp Raytracer.h Ray.h Scene.h Light.h Scene.cpp
+	$(CC) $(CFLAGS) $(INCFLAGS) -c Raytracer.cpp 
+Primitive.o: Primitive.cpp Primitive.h Shape.h Material.h Intersection.h 
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Primitive.cpp
 Triangle.o: Triangle.cpp Triangle.h Shape.h Intersection.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Triangle.cpp

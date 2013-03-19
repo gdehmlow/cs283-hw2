@@ -15,8 +15,8 @@ endif
 
 RM = /bin/rm -f 
 all: raytracer.qq
-raytracer.qq: main.o Scene.o Camera.o Screen.o Raytracer.o Triangle.o Sphere.o Primitive.o Transform.o AABB.o Sampler.o
-	$(CC) $(CFLAGS) -o raytracer.qq main.o Scene.o Camera.o Screen.o Raytracer.o Triangle.o Sphere.o Primitive.o Transform.o AABB.o Sampler.o $(INCFLAGS) $(LDFLAGS) 
+raytracer.qq: main.o Scene.o Camera.o Screen.o Raytracer.o Triangle.o Sphere.o Primitive.o Transform.o AABB.o Sampler.o Light.o
+	$(CC) $(CFLAGS) -o raytracer.qq main.o Scene.o Camera.o Screen.o Raytracer.o Triangle.o Sphere.o Primitive.o Transform.o Light.o AABB.o Sampler.o $(INCFLAGS) $(LDFLAGS) 
 main.o: main.cpp Scene.cpp Scene.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c main.cpp
 Scene.o: Scene.cpp Scene.h Camera.h Screen.h Triangle.h Sphere.h Primitive.h
@@ -25,7 +25,7 @@ Camera.o: Camera.cpp Camera.h Ray.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Camera.cpp
 Screen.o: Screen.cpp Screen.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Screen.cpp
-Raytracer.o: Raytracer.cpp Raytracer.h Ray.h Scene.h Light.h Scene.cpp
+Raytracer.o: Raytracer.cpp Raytracer.h Ray.h Scene.h Light.h Light.o Scene.cpp
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Raytracer.cpp 
 Primitive.o: Primitive.cpp Primitive.h Shape.h Material.h Intersection.h 
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Primitive.cpp
@@ -39,5 +39,7 @@ AABB.o: AABB.cpp AABB.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c AABB.cpp
 Sampler.o: Sampler.cpp Sampler.h
 	$(CC) $(CFLAGS) $(INCFLAGS) -c Sampler.cpp
+Light.o: Light.cpp Light.h
+	$(CC) $(CFLAGS) $(INCFLAGS) -c Light.cpp
 clean: 
 	$(RM) *.o raytracer.qq raytracer *.png

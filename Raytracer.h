@@ -18,7 +18,7 @@ class Raytracer {
         Raytracer(Scene* scene);
         ~Raytracer();
 
-        int traceRay(Ray* ray, int depth, glm::vec3& color, float rayRIndex);
+        void traceRay(Ray* ray, int depth, glm::vec3& color, float weight, int bounce, float rayRIndex);
 
     private:
         int maxDepth;

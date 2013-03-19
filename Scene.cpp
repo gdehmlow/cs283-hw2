@@ -55,7 +55,7 @@ int Scene::renderImage()
 void Scene::raytrace()
 {
     camera.setWidthAndHeight(screen.getWidth(), screen.getHeight());
-
+    srand ( time(NULL) );
     int numberOfPixels = screen.getWidth() * screen.getHeight();
     float spp = (float) samplesPerPixel;
     if (traceType == RAY) {
@@ -79,7 +79,7 @@ void Scene::raytrace()
             vec3 color = vec3(0.0);
             sample = sampler.getSample();
             camera.generateRay(ray,sample.x,sample.y);
-            tracer.traceRay(ray, 0, color, 1.0);
+            tracer.traceRay(ray, 0, color, 0.0f, 0, 1.0f);
             totalColor += color/spp;
         }
         screen.writePixel(totalColor,x,y);

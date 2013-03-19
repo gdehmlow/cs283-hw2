@@ -1,11 +1,13 @@
 #Cornell Box
-size 500 500
+size 100 100
 camera 0 0 1.99 0 0 0 0 1 0 60
 output cornellBox.bmp
 
-maxdepth 3
-samplesperpixel 1
-sampling jittered
+maxdepth 10
+samplesperpixel 10
+sampling random
+lighting direct
+tracingtype path
 
 #cube
 vertex -1 -1 +1
@@ -24,12 +26,13 @@ shininess 1
 emission 0 0 0
 diffuse 0 0 0
 
-attenuation 1 0.01 0.05
+attenuation 1 0 0
 
-area rect -.5 1.99 -2 0 0 -1 1 0 0 1.0 1.0 1.0 3
+area rect -.5 1.99 -2 0 0 -1 1 0 0 2 2 2 3
 #point 0 1.8 0 1.0 1.0 1.0
 
 #white walls
+material lambertian
 pushTransform
 diffuse 0.7 0.7 0.7
 scale 2 2 4
@@ -48,6 +51,7 @@ tri 2 3 6
 popTransform
 
 #red walls
+material lambertian
 pushTransform
 diffuse 1 0 0
 scale 2 2 4
@@ -56,6 +60,7 @@ tri 4 7 3
 popTransform
 
 #blue wall
+material lambertian
 pushTransform
 diffuse 0.3 0.3 1.0
 scale 2 2 4
@@ -64,15 +69,15 @@ tri 5 2 6
 popTransform
 
 #sphere
-diffuse 0.8 0.8 0.8
+diffuse 0.7 0.7 0.7
 specular 0.1 0.1 0.1
-material reflective
+material lambertian
 pushTransform
 sphere 1.0 -1.4 -2.5 0.8
 popTransform
 
 #sphere
-diffuse 0.8 0.8 0.8
+diffuse 0.7 0.7 0.7
 specular 0.1 0.1 0.1
 material lambertian
 pushTransform

@@ -4,7 +4,7 @@ camera 0 0 1.99 0 0 0 0 1 0 60
 output cornellBox.bmp
 
 maxdepth 10
-samplesperpixel 1000
+samplesperpixel 100
 sampling random
 direct on
 indirect on
@@ -29,7 +29,7 @@ diffuse 0 0 0
 
 attenuation 1 0 0
 
-area rect -.75 1.99 -2.25 0 0 -1.25 1.5 0 0 6 6 6 3
+area rect -.75 1.99 -1.5 0 0 -1.25 1.5 0 0 4 4 4 3
 #point 0 1.8 0 1.0 1.0 1.0
 
 #white walls
@@ -54,7 +54,7 @@ popTransform
 #red walls
 material lambertian
 pushTransform
-diffuse 1 0 0
+diffuse 0.9 0.3 0.3
 scale 2 2 4
 tri 4 3 0
 tri 4 7 3
@@ -63,7 +63,7 @@ popTransform
 #blue wall
 material lambertian
 pushTransform
-diffuse 0.3 0.3 1.0
+diffuse 0.5 0.5 0.9
 scale 2 2 4
 tri 1 2 5
 tri 5 2 6

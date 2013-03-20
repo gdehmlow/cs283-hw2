@@ -23,8 +23,13 @@ class Raytracer {
     private:
         int maxDepth;
         bool findClosestIntersection(const Ray& ray, int& closestIntersectionIndex, Intersection& closestIntersection);
-        glm::vec3 directLighting(const Ray& ray, const Intersection& surfaceIntersection, const Primitive& intersectedObject);
+        glm::vec3 directLighting(const Ray& ray, const Intersection& surfaceIntersection, 
+                                 const Primitive& intersectedObject);
         glm::vec3 indirectDiffuseLighting(const Intersection& surfaceIntersection, const Primitive& intersectedObject);
+        void sampleHemisphereUniformly(Ray& ray, const Intersection& surfaceIntersection);
+        void sampleHemisphereSpecular(Ray& ray, const Intersection& surfaceIntersection, 
+                                      const glm::vec3& perfectReflection, float shininess);
+        void rotateToVector(glm::vec3& rotateVector, const glm::vec3& oldZ, const glm::vec3& newZ);
         Scene* scene;
 };
 

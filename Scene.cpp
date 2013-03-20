@@ -82,7 +82,7 @@ void Scene::raytrace()
 
     Raytracer tracer = Raytracer(this);
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < numberOfPixels; i++) {
         Ray ray;
         vec3 color;

@@ -28,9 +28,8 @@ typedef struct _Light {
 
 class AreaLight {
     public:
-        virtual void getSample(const glm::vec3& position, const glm::vec3& normal, 
-                                     glm::vec3& lightIntensity, glm::vec3& incidentRay) = 0;
-
+        virtual void getSample(const glm::vec3& position, const glm::vec3& normal, glm::vec3& lightIntensity, 
+                                     glm::vec3& incidentRay) = 0;
 };
 
 /*
@@ -46,10 +45,11 @@ class AreaLight {
 
 class QuadLight : public AreaLight {
     public:
-        QuadLight(glm::vec3 position, glm::vec3 upVec, glm::vec3 rightVec, glm::vec3 color);
+        QuadLight(glm::vec3 position, glm::vec3 upVec, 
+                  glm::vec3 rightVec, glm::vec3 color);
         ~QuadLight();
-        void getSample(const glm::vec3& position, const glm::vec3& normal, 
-                             glm::vec3& lightIntensity, glm::vec3& incidentRay);
+        void getSample(const glm::vec3& position, const glm::vec3& normal, glm::vec3& lightIntensity, 
+                             glm::vec3& incidentRay);
     private:
         glm::vec3 position;
         glm::vec3 upVec;

@@ -26,14 +26,15 @@ QuadLight::~QuadLight()
 }
 
 /*
-    Takes in a point on some surface and returns (via lightIntensity) the
-    incoming radiance at that point from a random point on the QuadLight.
+    Takes in a point on some surface and returns (via lightIntensity) the incoming radiance at that point from a random 
+    point on the QuadLight.
 
-    Used when the DirectLighting setting is on.
+    Used when the DirectLighting setting is on, otherwise lighting occurs only through indirect bounces that hit the
+    area light geometry.
 
-    This represents:
-    lightIntensity = L_o(x'_i, w'_i)*G(x,x'_i)*V(x,x'_i)*A
-    found in the lecture 10 slides.
+    lightIntensity = L_o(x'_i, w'_i)*G(x,x'_i)*V(x,x'_i)*A, found in the lecture 10 slides. 
+
+    Note: the visibility term is calculated in the DirectLighting routine
 */
 void QuadLight::getSample(const vec3& position, const vec3& normal, 
                                 vec3& lightIntensity, vec3& incidentRay)
@@ -48,8 +49,7 @@ void QuadLight::getSample(const vec3& position, const vec3& normal,
     float incidentLength = glm::length(incidentRay);
 
     // Calculates G(x,x'_i) = cos(θ)cos(θ'_i)/|x-x'_i|^2
-    float g = std::max(glm::dot(incidentRay,normal),0.0f) * 
-              std::max(glm::dot(-incidentRay,this->normal),0.0f) /
+    float g = std::max(glm::dot(incidentRay,normal),0.0f) * std::max(glm::dot(-incidentRay,this->normal),0.0f) /
               std::pow(incidentLength, 4.0f);
 
     lightIntensity = this->color * g * area;

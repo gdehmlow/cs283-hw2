@@ -15,6 +15,11 @@ Primitive::~Primitive()
 {
 }
 
+int Primitive::getIntersectionPoint(Ray& ray, Intersection& intersection)
+{
+    return shape->getIntersectionPoint(ray, intersection);
+}
+
 int Primitive::intersectionPoint(Ray* ray, Intersection* intersection)
 {
     return shape->intersectionPoint(ray, intersection);

@@ -26,10 +26,173 @@ Raytracer::Raytracer(Scene* scene)
 
 Raytracer::~Raytracer()
 {
-
 }
 
-void Raytracer::traceRay(Ray* ray, int depth, glm::vec3& color, float weight, int bounce, float rayRIndex)
+vec3 Raytracer::pathTraceRay(Ray& ray, int depth, vec3& color, float weight, int bounce)
+{
+    int closestIntersectionIndex;
+    Intersection closestIntersection;
+
+    if (findClosestIntersection(ray, closestIntersectionIndex, closestIntersection)) {
+
+        Primitive intersectedObject = scene->primitiveList[closestIntersectionIndex];
+        Intersection lightIntersect;
+
+        // Move intersection from object to world space
+        lightIntersect.position = closestIntersection.position * intersectedObject.transformation;
+        lightIntersect.normal   = glm::normalize(closestIntersection.normal * intersectedObject.inverseTranspose);
+        
+        // Russian roulette
+        // We'll sum the reflectance coefficients of the material after first weighting them according to the luminance
+        // of the NTSC (1953) color space. We'll continue the ray with that probability, otherwise we will terminate.
+        // Note: this assumes the coefficients sum <= 1
+        float p, ran;
+        vec3 coefficients = vec3(0.0f);
+
+        switch (intersectedObject.material->type) {
+            case LAMBERTIAN:
+                coefficients = intersectedObject.material->diffuse;
+                break;
+            case GLOSSY:
+                coefficients = intersectedObject.material->diffuse + intersectedObject.material->specular;
+                break;
+            case REFLECTIVE:
+                coefficients = intersectedObject.material->reflection;
+                break;
+            case TRANSMISSIVE:
+                coefficients = intersectedObject.material->transmission;
+                break;
+        }
+
+        p = coefficients.x*0.2989f + coefficients.y*0.5866f + coefficients.z*0.1145f;
+        ran = rand() / double(RAND_MAX);
+        vec3 color = vec3(0.0f);
+
+        if (ran > p) {
+            if (scene->directLighting && intersectedObject.material->type == EMISSIVE && bounce > 0) {
+                return color;
+            } else {
+                return intersectedObject.material->emission;
+            }
+        } else {
+            switch (intersectedObject.material->type) {
+                case LAMBERTIAN: {
+                    if (scene->directLighting) {
+                        color += directLighting(ray, lightIntersect, intersectedObject);
+                    }
+
+                    if (scene->indirectLighting) {
+                        color += indirectDiffuseLighting(lightIntersect, intersectedObject) / p;
+                    }
+
+                    break;
+                }
+/*
+                case GLOSSY: {
+                    if (scene->directLighting) {
+                        color += directLighting(ray, lightIntersect, intersectedObject);
+                    }
+
+                    if (scene->indirectLighting) {
+                        color += indirectDiffuseLighting(lightIntersect, intersectedObject) / p;
+                    }
+
+                    break;
+                }
+
+                case REFLECTIVE: {
+                    if (scene->directLighting) {
+                        color += directLighting(ray, lightIntersect, intersectedObject);
+                    }
+
+                    if (scene->indirectLighting) {
+                        color += indirectDiffuseLighting(lightIntersect, intersectedObject) / p;
+                    }
+
+                    break;
+                }
+
+                case TRANSMISSIVE: {
+                    if (scene->directLighting) {
+                        color += directLighting(ray, lightIntersect, intersectedObject);
+                    }
+
+                    if (scene->indirectLighting) {
+                        color += indirectDiffuseLighting(lightIntersect, intersectedObject) / p;
+                    }
+
+                    break;
+                }
+*/
+            }
+        }
+
+        if (scene->directLighting) {
+            color += directLighting(ray, lightIntersect, intersectedObject);
+        }  
+
+        vec4 randomRayDir = vec4(1.0);
+        randomRayDir.z = rand() / double(RAND_MAX);
+        float xyproj = sqrt(1 - randomRayDir.z * randomRayDir.z);
+        float phi = 2 * M_PI * rand() / double(RAND_MAX);
+        randomRayDir.x = xyproj * cos(phi);
+        randomRayDir.y = xyproj * sin(phi);
+        randomRayDir = glm::normalize(randomRayDir);
+        if (glm::dot(randomRayDir, lightIntersect->normal) < 0.0f) {
+            randomRayDir = -randomRayDir;
+        }
+        vec3 randomColor = vec3(0.0);
+        Ray* randomRay = new Ray();
+        randomRay->position = lightIntersect->position + randomRayDir * 0.001;
+        randomRay->direction = randomRayDir;
+        traceRay(randomRay, depth + 1, randomColor, weight, ++bounce, rayRIndex);
+
+        if (intersectedObject.material->type == LAMBERTIAN) { 
+            color += intersectedObject.material->diffuse * glm::dot(lightIntersect->normal, randomRay->direction) * randomColor / p;
+        }
+
+    } else {
+        // This could be replaced with a skybox in the future
+        return vec3(0.0);
+    }
+}
+
+bool Raytracer::findClosestIntersection(Ray& ray, int& closestIntersectionIndex, Intersection& closestIntersection)
+{
+    float minimumT = FLT_MAX;
+    std::vector<Primitive>::iterator it;
+    Ray tempRay;
+    Intersection tempIntersect;
+    int i = 0;
+    bool didIntersect = false;
+
+    // Used for flipping the normal for transmissive objects
+    int tempFlip;
+    int actualFlip;
+
+    // Iterate over all the objects in the scene and find the nearest intersection
+    for (it = scene->primitiveList.begin(); it < scene->primitiveList.end(); it++) {
+        tempRay.position = ray.position * it->inverseTransformation;
+        tempRay.direction = ray.direction * it->inverseTransformation;
+
+        if (tempFlip = it->getIntersectionPoint(tempRay, tempIntersect)) {
+            if (tempIntersect.t < minimumT && tempIntersect.t >= 0.0f) {
+                actualFlip = tempFlip;
+                minimumT = tempIntersect.t;
+                closestIntersectionIndex = i;
+                closestIntersection.position = tempIntersect.position;
+                closestIntersection.normal = tempIntersect.normal;
+                closestIntersection.t = tempIntersect.t;
+                didIntersect = true;
+            }
+        }
+        ++i;
+    }
+
+    return didIntersect;
+}
+
+void Raytracer::traceRay(Ray* ray, int depth, vec3& color, float weight, int bounce, float rayRIndex)
 {
     int intersectPrimIndex = -1;
     Ray* tempRay = new Ray;                 // Temporary ray for finding intersection
@@ -115,7 +278,7 @@ void Raytracer::traceRay(Ray* ray, int depth, glm::vec3& color, float weight, in
         randomRay->direction = randomRayDir;
         traceRay(randomRay, depth + 1, randomColor, weight, ++bounce, rayRIndex);
 
-        if (intersectedObject.material->type == LAMBERTIAN) {
+        if (intersectedObject.material->type == LAMBERTIAN) { 
             color += intersectedObject.material->diffuse * glm::dot(lightIntersect->normal, randomRay->direction) * randomColor / p;
         }
     } 

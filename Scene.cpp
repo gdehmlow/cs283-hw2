@@ -65,23 +65,39 @@ void Scene::raytrace()
     }
     cout << "Samples per pixel: " << samplesPerPixel << "\n";
 
+    cout << "Indirect lighting: ";
+    if (indirectLighting == true) {
+        cout << "on\n";
+    } else {
+        cout << "off\n";
+    }
+
+    cout << "Direct lighting: ";
+    if (directLighting == true) {
+        cout << "on\n";
+    } else {
+        cout << "off\n";
+    }
+
+
     Raytracer tracer = Raytracer(this);
 
     //#pragma omp parallel for
     for (int i = 0; i < numberOfPixels; i++) {
         Ray ray;
-        vec3 totalColor = vec3(0.0);
+        vec3 color;
+        vec3 totalColor = vec3(0.0f);
         int x = i % screen.getWidth();
         int y = i / screen.getWidth();
         Sample sample;
         Sampler sampler = Sampler(x, y, samplesPerPixel, samplerType);
         while (sampler.hasSamples() != false) {
-            vec3 color = vec3(0.0);
             sample = sampler.getSample();
             camera.generateRay(ray,sample.x,sample.y);
-            tracer.pathTraceRay(ray, 0, color, 1.0f, 0);
-            totalColor += color/spp;
+            color = tracer.pathTraceRay(ray, 0, 1.0f, 0);
+            totalColor += color;
         }
+        totalColor /= spp;
         screen.writePixel(totalColor,x,y);
     }
     screen.saveScreenshot(("testscenes/" + outputFilename).c_str());
@@ -207,17 +223,13 @@ void Scene::parseFile(const char* filename)
                 } else if (cmd == "sampling") {
                     string samplingType;
                     s >> samplingType;
-                    cout << "Sampling type: ";
 
                     if (samplingType.compare("regular") == 0) {
                         samplerType = REGULAR;
-                        cout << "regular\n";
                     } else if (samplingType.compare("jittered") == 0) {
                         samplerType = JITTERED;
-                        cout << "jittered\n";
                     } else if (samplingType.compare("random") == 0) {
                         samplerType = RANDOM;
-                        cout << "random\n";
                     } else {
                         cout << "Unrecognizable sampling type. Defaulting to regular\n";
                     }

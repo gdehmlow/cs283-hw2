@@ -1,12 +1,13 @@
 #Cornell Box
-size 100 100
+size 500 500
 camera 0 0 1.99 0 0 0 0 1 0 60
 output cornellBox.bmp
 
 maxdepth 10
-samplesperpixel 10
+samplesperpixel 1000
 sampling random
-lighting direct
+direct on
+indirect on
 tracingtype path
 
 #cube
@@ -28,7 +29,7 @@ diffuse 0 0 0
 
 attenuation 1 0 0
 
-area rect -.5 1.99 -2 0 0 -1 1 0 0 2 2 2 3
+area rect -.75 1.99 -2.25 0 0 -1.25 1.5 0 0 6 6 6 3
 #point 0 1.8 0 1.0 1.0 1.0
 
 #white walls

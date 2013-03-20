@@ -29,7 +29,7 @@ Raytracer::~Raytracer()
 }
 
 // Main path tracing routine
-vec3 Raytracer::pathTraceRay(const Ray& ray, int depth, vec3& color, float weight, int bounce)
+vec3 Raytracer::pathTraceRay(const Ray& ray, int depth, float weight, int bounce)
 {
     int closestIntersectionIndex;
     Intersection closestIntersection;
@@ -64,26 +64,43 @@ vec3 Raytracer::pathTraceRay(const Ray& ray, int depth, vec3& color, float weigh
                 coefficients = intersectedObject.material->transmission;
                 break;
         }
-
         p = coefficients.x*0.2989f + coefficients.y*0.5866f + coefficients.z*0.1145f;
+
         ran = rand() / double(RAND_MAX);
         vec3 color = vec3(0.0f);
+
+        if (scene->directLighting) {
+            color += directLighting(ray, surfaceIntersection, intersectedObject);
+            //std::cout << "color: " << color.x << "," << color.y << "," << color.z << "\n";
+        }
 
         if (ran > p) {
             if (scene->directLighting && intersectedObject.material->type == EMISSIVE && bounce > 0) {
                 return color;
             } else {
-                return intersectedObject.material->emission;
+                return intersectedObject.material->emission / (1.0f - p);
             }
         } else {
             switch (intersectedObject.material->type) {
                 case LAMBERTIAN: {
-                    if (scene->directLighting) {
-                        color += directLighting(ray, surfaceIntersection, intersectedObject);
-                    }
-
                     if (scene->indirectLighting) {
-                        color += indirectDiffuseLighting(surfaceIntersection, intersectedObject) / p;
+                        // color += indirectDiffuseLighting(surfaceIntersection, intersectedObject) / p;    
+                        vec4 randomRayDir = vec4(1.0);
+                        randomRayDir.z = rand() / double(RAND_MAX);
+                        float xyproj = sqrt(1 - randomRayDir.z * randomRayDir.z);
+                        float phi = 2 * M_PI * rand() / double(RAND_MAX);
+                        randomRayDir.x = xyproj * cos(phi);
+                        randomRayDir.y = xyproj * sin(phi);
+                        randomRayDir = glm::normalize(randomRayDir);
+                        if (glm::dot(randomRayDir, surfaceIntersection.normal) < 0.0f) {
+                            randomRayDir = -randomRayDir;
+                        }
+                        Ray randomRay;
+                        randomRay.position = surfaceIntersection.position + randomRayDir * 0.001;
+                        randomRay.direction = randomRayDir;
+                        vec3 randomColor = pathTraceRay(randomRay, depth + 1, weight, ++bounce);
+
+                        color += intersectedObject.material->diffuse * glm::dot(surfaceIntersection.normal, randomRay.direction) * randomColor * 2.0f;
                     }
 
                     break;
@@ -127,31 +144,8 @@ vec3 Raytracer::pathTraceRay(const Ray& ray, int depth, vec3& color, float weigh
 */
             }
         }
-/*
-        if (scene->directLighting) {
-            color += directLighting(ray, lightIntersect, intersectedObject);
-        }  
 
-        vec4 randomRayDir = vec4(1.0);
-        randomRayDir.z = rand() / double(RAND_MAX);
-        float xyproj = sqrt(1 - randomRayDir.z * randomRayDir.z);
-        float phi = 2 * M_PI * rand() / double(RAND_MAX);
-        randomRayDir.x = xyproj * cos(phi);
-        randomRayDir.y = xyproj * sin(phi);
-        randomRayDir = glm::normalize(randomRayDir);
-        if (glm::dot(randomRayDir, lightIntersect->normal) < 0.0f) {
-            randomRayDir = -randomRayDir;
-        }
-        vec3 randomColor = vec3(0.0);
-        Ray* randomRay = new Ray();
-        randomRay->position = lightIntersect->position + randomRayDir * 0.001;
-        randomRay->direction = randomRayDir;
-        traceRay(randomRay, depth + 1, randomColor, weight, ++bounce, rayRIndex);
-
-        if (intersectedObject.material->type == LAMBERTIAN) { 
-            color += intersectedObject.material->diffuse * glm::dot(lightIntersect->normal, randomRay->direction) * randomColor / p;
-        }
-*/
+        return color;
     } else {
         // This could be replaced with a skybox in the future
         return vec3(0.0);
@@ -203,23 +197,53 @@ vec3 Raytracer::directLighting(const Ray& ray, const Intersection& surfaceInters
     Ray shadowRay;
     Ray tempRay;
     float tmax;
+    bool visible = true;
 
     vec3 color = vec3(0.0f);
+    vec3 lightIntensity = vec3(0.0f);
+    vec3 rayToLight = vec3(0.0f);
 
+    // Loop over all the area lights
     for (lit = scene->areaLightList.begin(); lit < scene->areaLightList.end(); lit++) {
+
+        // Get sample from the area light source (puts result into rayToLight)
+        (*lit)->getSample(surfaceIntersection.position.xyz, surfaceIntersection.normal.xyz, lightIntensity, rayToLight);
+
+        tmax = glm::length(rayToLight); // So we don't count intersections behind the light
+        shadowRay.direction = vec4(glm::normalize(rayToLight),1.0);
+        shadowRay.position  = surfaceIntersection.position + 0.001f * shadowRay.direction;
+
         // Loop through each object again to see if our light ray intersects with anything
-
-
-        int k = 0;
-        for (it = scene->primitiveList.begin(); it < scene->primitiveList.end(); it++, k++) {
+        for (it = scene->primitiveList.begin(); it < scene->primitiveList.end(); it++) {
             // Transform shadowRay into object space
             tempRay.position = shadowRay.position * it->inverseTransformation;
             tempRay.direction = shadowRay.direction * it->inverseTransformation;
 
             if (it->doesRayIntersect(tempRay, tmax)) {
-                //visibility = 0.0f;
+                visible = false;
                 break;
             }
+        }
+
+        // If the light is unobstructed from the intersection point, we're good to go with shading
+        if (visible) {
+            // Diffuse term
+            color += intersectedObject.material->diffuse * lightIntensity / (float)M_PI;
+            //std::cout << "lightIntensity: " << lightIntensity.x << "," << lightIntensity.y << "," << lightIntensity.z << "\n";
+
+            // Specular term
+            if (intersectedObject.material->type == GLOSSY) {
+                vec4 V = glm::normalize(ray.position - surfaceIntersection.position);
+                float nDotH = std::pow(std::max(glm::dot(surfaceIntersection.normal, 
+                                                         glm::normalize(shadowRay.direction+V)),
+                                                0.0f),
+                                       intersectedObject.material->shininess); 
+                color += intersectedObject.material->specular*nDotH;
+            }            
+            float attenuation;
+            float r = tmax;
+            attenuation = (1.0f/(scene->attenuation[0] + scene->attenuation[1]*r + scene->attenuation[1]*r*r));
+            color *= attenuation;
         }
     }
 
@@ -228,8 +252,9 @@ vec3 Raytracer::directLighting(const Ray& ray, const Intersection& surfaceInters
 }
 
 vec3 Raytracer::indirectDiffuseLighting(const Intersection& surfaceIntersection, const Primitive& intersectedObject)
-{
-    return vec3(0.0f);
+{        
+
+    return vec3(0.0);
 }
 
 /*

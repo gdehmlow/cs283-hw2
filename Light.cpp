@@ -5,6 +5,7 @@
         QuadLight
 */
 
+#include <iostream>
 #include <algorithm>
 #include "Light.h"
 
@@ -18,7 +19,8 @@ QuadLight::QuadLight(vec3 position, vec3 upVec, vec3 rightVec, vec3 color)
     this->rightVec  = rightVec;
     this->color     = color;
 
-    this->normal = glm::normalize(glm::cross(rightVec, upVec));
+    this->normal = glm::normalize(glm::cross(upVec, rightVec));
+    this->area = glm::length(upVec) * glm::length(rightVec);
 }
 
 QuadLight::~QuadLight()
@@ -49,8 +51,13 @@ void QuadLight::getSample(const vec3& position, const vec3& normal,
     float incidentLength = glm::length(incidentRay);
 
     // Calculates G(x,x'_i) = cos(θ)cos(θ'_i)/|x-x'_i|^2
-    float g = std::max(glm::dot(incidentRay,normal),0.0f) * std::max(glm::dot(-incidentRay,this->normal),0.0f) /
-              std::pow(incidentLength, 4.0f);
+    float g = std::max(glm::dot(incidentRay,normal) / incidentLength,0.0f) * 
+              std::max(glm::dot(-incidentRay,this->normal) / incidentLength,0.0f);// /
+              //std::pow(incidentLength, 2.0f);
+
+    //std::cout << std::max(glm::dot(incidentRay,normal),0.0f) / incidentLength << "\n";
+    //std::cout << std::max(glm::dot(incidentRay,this->normal),0.0f) / incidentLength << "\n";
+    //std::cout << "<" << this->color.x << ", " << this->color.y << ", " << this->color.z << ">, " << g << ", " << area << "\n";
 
     lightIntensity = this->color * g * area;
 }

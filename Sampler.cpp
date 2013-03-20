@@ -17,7 +17,7 @@ Sampler::Sampler(int x, int y, int samplesPerPixel, SamplerType t)
     this->hasSamps              = true;
     this->currentSubPixelCount  = 0;
     this->sqrtSamplesPerPixel   = static_cast<int>(sqrt(static_cast<float>(samplesPerPixel)) + .5f);
-    this->samplesPerPixel       = this->sqrtSamplesPerPixel * this->sqrtSamplesPerPixel;
+    this->samplesPerPixel       = samplesPerPixel;
     this->subPixelOffset        = 0.5/((float) this->sqrtSamplesPerPixel);
 }
 
@@ -51,7 +51,7 @@ Sample Sampler::getSample()
 
     currentSubPixelCount++;
 
-    if (currentSubPixelCount > samplesPerPixel) {
+    if (currentSubPixelCount > samplesPerPixel - 2) {
         currentSubPixelCount = 0;
         hasSamps = false;
     }

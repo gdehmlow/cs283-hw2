@@ -32,7 +32,7 @@ void Camera::init(float* values)
     tanfovy = tan(fovy / 2.0);
 }
 
-void Camera::setWidthAndHeight(int width, int height)
+void Camera::setWidthAndHeight(int const width, int const height)
 {
     this->width = width;
     this->height = height;
@@ -41,13 +41,11 @@ void Camera::setWidthAndHeight(int width, int height)
     tanfovx = tanfovy * w2 / h2;
 }
 
-void Camera::generateRay(Ray* ray, float x, float y)
+void Camera::generateRay(Ray& ray, const float x, const float y)
 {
-    x = x + 0.5;
-    y = y + 0.5;
-    float alpha = tanfovx * (x - w2) / w2;
-    float beta = tanfovy * (y - h2) / h2;
+    float alpha = tanfovx * (x + 0.5f - w2) / w2;
+    float beta = tanfovy * (y + 0.5f - h2) / h2;
     vec3 tempVec = glm::normalize(alpha*u + beta*v - w);
-    ray->position = vec4(eye,1);
-    ray->direction = vec4(tempVec,0);
+    ray.position = vec4(eye,1);
+    ray.direction = vec4(tempVec,0);
 }

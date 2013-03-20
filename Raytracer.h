@@ -18,13 +18,15 @@ class Raytracer {
         Raytracer(Scene* scene);
         ~Raytracer();
 
-        void traceRay(Ray* ray, int depth, glm::vec3& color, float weight, int bounce, float rayRIndex);
-        glm::vec3 pathTraceRay(Ray& ray, int depth, glm::vec3& color, float weight, int bounce);
+        //void traceRay(Ray* ray, int depth, glm::vec3& color, float weight, int bounce, float rayRIndex);
+        glm::vec3 pathTraceRay(const Ray& ray, int depth, glm::vec3& color, float weight, int bounce);
 
     private:
         int maxDepth;
-        bool findClosestIntersection(Ray& ray, int& closestIntersectionIndex, Intersection& closestIntersection);
-        glm::vec3 directLighting(Ray* ray, Intersection* lightIntersect, Primitive* intersectedObject);
+        bool findClosestIntersection(const Ray& ray, int& closestIntersectionIndex, Intersection& closestIntersection);
+        glm::vec3 directLighting(const Ray& ray, const Intersection& surfaceIntersection, const Primitive& intersectedObject);
+        glm::vec3 indirectDiffuseLighting(const Intersection& surfaceIntersection, const Primitive& intersectedObject);
+        //glm::vec3 directLighting(Ray* ray, Intersection* lightIntersect, Primitive* intersectedObject);
         Scene* scene;
 };
 

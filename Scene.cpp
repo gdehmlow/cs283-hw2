@@ -69,7 +69,7 @@ void Scene::raytrace()
 
     //#pragma omp parallel for
     for (int i = 0; i < numberOfPixels; i++) {
-        Ray* ray = new Ray();
+        Ray ray;
         vec3 totalColor = vec3(0.0);
         int x = i % screen.getWidth();
         int y = i / screen.getWidth();
@@ -79,11 +79,10 @@ void Scene::raytrace()
             vec3 color = vec3(0.0);
             sample = sampler.getSample();
             camera.generateRay(ray,sample.x,sample.y);
-            tracer.traceRay(ray, 0, color, 0.0f, 0, 1.0f);
+            tracer.pathTraceRay(ray, 0, color, 1.0f, 0);
             totalColor += color/spp;
         }
         screen.writePixel(totalColor,x,y);
-        delete ray;
     }
     screen.saveScreenshot(("testscenes/" + outputFilename).c_str());
 }
@@ -148,14 +147,14 @@ void Scene::parseFile(const char* filename)
         vector<vec3> tempVerticesN;
         vector<vec3> tempNormals;
 
-        Material* tempMaterial  = new Material;
-        tempMaterial->specular  = vec3(0.0,0.0,0.0);
-        tempMaterial->diffuse   = vec3(0.0,0.0,0.0);
-        tempMaterial->emission  = vec3(0.0,0.0,0.0);
-        tempMaterial->shininess = 0.0;
-        tempMaterial->alpha     = 1.0;
-        tempMaterial->rindex    = 1.0;
-        tempMaterial->type      = LAMBERTIAN;   
+        Material tempMaterial;
+        tempMaterial.specular  = vec3(0.0,0.0,0.0);
+        tempMaterial.diffuse   = vec3(0.0,0.0,0.0);
+        tempMaterial.emission  = vec3(0.0,0.0,0.0);
+        tempMaterial.shininess = 0.0;
+        tempMaterial.alpha     = 1.0;
+        tempMaterial.rindex    = 1.0;
+        tempMaterial.type      = LAMBERTIAN;   
 
         while (in) {
             if ((str.find_first_not_of(" \t\r\n") != string::npos) && (str[0] != '#')) {
@@ -222,14 +221,23 @@ void Scene::parseFile(const char* filename)
                     } else {
                         cout << "Unrecognizable sampling type. Defaulting to regular\n";
                     }
-                } else if (cmd == "lighting") {
+                } else if (cmd == "direct") {
                     string lightingType;
                     s >> lightingType;
 
-                    if (lightingType.compare("direct") == 0) {
+                    if (lightingType.compare("on") == 0) {
                         directLighting = true;
-                    } else if (lightingType.compare("indirect") == 0) {
+                    } else if (lightingType.compare("off") == 0) {
                         directLighting = false;
+                    }
+                } else if (cmd == "indirect") {
+                    string lightingType;
+                    s >> lightingType;
+
+                    if (lightingType.compare("on") == 0) {
+                        indirectLighting = true;
+                    } else if (lightingType.compare("off") == 0) {
+                        indirectLighting = false;
                     }
                 }
 
@@ -335,7 +343,7 @@ void Scene::parseFile(const char* filename)
                     if (lightType.compare("rect") == 0) {
                         validinput = readvals(s,13,values);
                         if (validinput) {
-                            Light light;
+                            /*Light light;
                             light.posdir    = vec4(values[0],values[1],values[2],1);
                             light.upStep    = vec4(values[3]/ (double) values[12],values[4]/ (double) values[12],values[5]/ (double) values[12],1.0);
                             light.rightStep = vec4(values[6]/ (double) values[12],values[7]/ (double) values[12],values[8]/ (double) values[12],1.0);
@@ -344,8 +352,16 @@ void Scene::parseFile(const char* filename)
                             light.type = AREA;
                             light.areaType = RECT;
                             light.numSamples = values[12]; // Will actually take square of this!!
-                            lightList.push_back(light);
+                            lightList.push_back(light);*/
 
+                            // Create the light to be used in lighting calculations
+                            QuadLight* light = new QuadLight(vec3(values[0],values[1],values[2]), 
+                                                             vec3(values[3],values[4],values[5]),
+                                                             vec3(values[6],values[7],values[8]),
+                                                             vec3(values[9],values[10],values[11]));
+                            areaLightList.push_back(light);
+
+                            // Create the geometry representing the light in the scene
                             vec3 vert0 = vec3(values[0],values[1],values[2]);
                             vec3 vert1 = vert0 + vec3(values[3],values[4],values[5]);
                             vec3 vert2 = vert0 + vec3(values[6],values[7],values[8]);
@@ -354,28 +370,27 @@ void Scene::parseFile(const char* filename)
                             Triangle* triangle = new Triangle(vert0, vert2, vert1);
                             Primitive prim(triangle);
                             prim.setAmbient(ambient);
-                            vec3 emis = vec3(light.color);
+                            vec3 emis = vec3(values[9],values[10],values[11]);
                             vec3 other = vec3(0.0);
 
-                            Material* matt = new Material();
-                            matt->specular = other;
-                            matt->diffuse = other;
-                            matt->emission = emis;
-                            matt->alpha = 0;
-                            matt->shininess = 1;
-                            matt->type = EMISSIVE;
+                            Material matt;
+                            matt.specular = other;
+                            matt.diffuse = other;
+                            matt.emission = emis;
+                            matt.alpha = 0;
+                            matt.shininess = 1;
+                            matt.type = EMISSIVE;
 
                             prim.setMaterial(matt);
                             prim.setTransformation(transfstack.top());
                             primitiveList.push_back(prim);
 
-                            triangle = new Triangle(vert2, vert3, vert1);
-                            Primitive prim2(triangle);
+                            Triangle* triangle2 = new Triangle(vert2, vert3, vert1);
+                            Primitive prim2(triangle2);
                             prim2.setAmbient(ambient);
                             prim2.setMaterial(matt);
                             prim2.setTransformation(transfstack.top());
                             primitiveList.push_back(prim2);
-                            delete matt;
                         }
                     } else {
                         cout << "Unrecognizable light type: " << lightType << ", skipping.";
@@ -399,45 +414,45 @@ void Scene::parseFile(const char* filename)
                 else if (cmd == "diffuse") {
                     validinput = readvals(s,3,values);
                     if (validinput) {
-                        tempMaterial->diffuse = vec3(values[0], values[1], values[2]);
+                        tempMaterial.diffuse = vec3(values[0], values[1], values[2]);
                     }
                 } else if (cmd == "specular") {
                     validinput = readvals(s,3,values);
                     if (validinput) {
-                        tempMaterial->specular = vec3(values[0], values[1], values[2]);
+                        tempMaterial.specular = vec3(values[0], values[1], values[2]);
                     }
                 } else if (cmd == "emission") {
                     validinput = readvals(s,3,values);
                     if (validinput) {
-                        tempMaterial->emission = vec3(values[0], values[1], values[2]);
+                        tempMaterial.emission = vec3(values[0], values[1], values[2]);
                     }
                 } else if (cmd == "shininess") {
                     validinput = readvals(s,1,values);
                     if (validinput) {
-                        tempMaterial->shininess = values[0];
+                        tempMaterial.shininess = values[0];
                     }
                 } else if (cmd == "alpha") {
                     validinput = readvals(s,1,values);
                     if (validinput) {
-                        tempMaterial->alpha = values[0];
+                        tempMaterial.alpha = values[0];
                     }
                 } else if (cmd == "rindex") {
                     validinput = readvals(s,1,values);
                     if (validinput) {
-                        tempMaterial->rindex = values[0];
+                        tempMaterial.rindex = values[0];
                     }
                 } else if (cmd == "material") {
                     string materialType;
                     s >> materialType;
 
                     if (materialType.compare("lambertian") == 0) {
-                        tempMaterial->type = LAMBERTIAN;
+                        tempMaterial.type = LAMBERTIAN;
                     } else if (materialType.compare("glossy") == 0) {
-                        tempMaterial->type = GLOSSY;
+                        tempMaterial.type = GLOSSY;
                     } else if (materialType.compare("transmissive") == 0) {
-                        tempMaterial->type = TRANSMISSIVE;
+                        tempMaterial.type = TRANSMISSIVE;
                     } else if (materialType.compare("reflective") == 0) {
-                        tempMaterial->type = REFLECTIVE;
+                        tempMaterial.type = REFLECTIVE;
                     } else {
                         cout << "Unrecognizable material type. Defaulting to previous material type.\n";
                     }

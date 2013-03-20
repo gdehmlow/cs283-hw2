@@ -45,10 +45,11 @@ class Scene {
 
         std::vector<Primitive> primitiveList;
         std::vector<Light> lightList;
+        std::vector<AreaLight*> areaLightList;
         glm::vec3 attenuation;
         glm::vec3 ambient;
         std::string outputFilename;
-        std::stack <glm::mat4> transfstack; 
+        std::stack<glm::mat4> transfstack; 
 
         // AABB related variables
         glm::vec3 gridStart;
@@ -61,6 +62,7 @@ class Scene {
         int maxDepth;
         int samplesPerPixel;
         bool directLighting;
+        bool indirectLighting;
         SamplerType samplerType;    // How we shoot rays through pixels
         TraceType traceType;        // Raytracing or Pathtracing
         SamplingType samplingType;  // How we weight indirect lighting rays

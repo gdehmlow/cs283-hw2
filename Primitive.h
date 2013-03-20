@@ -19,11 +19,16 @@ class Primitive {
     public:
         Primitive(Shape* shape);
         ~Primitive();
-        int getIntersectionPoint(Ray& ray, Intersection& intersection);
+
+        int getIntersectionPoint(const Ray& ray, Intersection& intersection);
+        bool doesRayIntersect(const Ray& ray, const float tmax);
+
+        // Delete soon
         int intersectionPoint(Ray* ray, Intersection* intersection);
         bool doesIntersect(Ray* ray, float tmax);
+
         void setAmbient(glm::vec3& ambient);
-        void setMaterial(Material* material);
+        void setMaterial(const Material& material);
         void setTransformation(glm::mat4& transformation);
         AABB* getAABB();
 

@@ -14,8 +14,8 @@ class Camera {
     public:
         Camera();
         void init(float* values);
-        void setWidthAndHeight(int width, int height);
-        void generateRay(Ray* ray, float x, float y);
+        void setWidthAndHeight(const int width, const int height);
+        void generateRay(Ray& ray, const float x, const float y);
 
     private:
         glm::vec3 eye;

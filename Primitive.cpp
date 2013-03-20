@@ -15,18 +15,29 @@ Primitive::~Primitive()
 {
 }
 
-int Primitive::getIntersectionPoint(Ray& ray, Intersection& intersection)
-{
-    return shape->getIntersectionPoint(ray, intersection);
-}
-
 int Primitive::intersectionPoint(Ray* ray, Intersection* intersection)
 {
     return shape->intersectionPoint(ray, intersection);
 }
 
+int Primitive::getIntersectionPoint(const Ray& ray, Intersection& intersection)
+{
+    return shape->getIntersectionPoint(ray, intersection);
+}
+
+bool Primitive::doesRayIntersect(const Ray& ray, const float tmax)
+{
+    // This seems hacky.
+    if (this->material->type == EMISSIVE) {
+        return false;
+    } else {
+        return shape->doesRayIntersect(ray, tmax);
+    }
+}
+
 bool Primitive::doesIntersect(Ray* ray, float tmax)
 {
+    // So does this XD
     if (this->material->type == EMISSIVE) {
         return false;
     } else {
@@ -39,15 +50,15 @@ void Primitive::setAmbient(glm::vec3& ambient)
     this->ambient = ambient;
 }
 
-void Primitive::setMaterial(Material* material)
+void Primitive::setMaterial(const Material& material)
 {
-    this->material->diffuse = glm::vec3(material->diffuse);
-    this->material->specular = glm::vec3(material->specular);
-    this->material->emission = glm::vec3(material->emission);
-    this->material->shininess = material->shininess;
-    this->material->alpha = material->alpha;
-    this->material->rindex = material->rindex;
-    this->material->type = material->type;
+    this->material->diffuse     = glm::vec3(material.diffuse);
+    this->material->specular    = glm::vec3(material.specular);
+    this->material->emission    = glm::vec3(material.emission);
+    this->material->shininess   = material.shininess;
+    this->material->alpha       = material.alpha;
+    this->material->rindex      = material.rindex;
+    this->material->type        = material.type;
 }
 
 void Primitive::setTransformation(glm::mat4& transformation)

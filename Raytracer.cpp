@@ -28,7 +28,8 @@ Raytracer::~Raytracer()
 {
 }
 
-vec3 Raytracer::pathTraceRay(Ray& ray, int depth, vec3& color, float weight, int bounce)
+// Main path tracing routine
+vec3 Raytracer::pathTraceRay(const Ray& ray, int depth, vec3& color, float weight, int bounce)
 {
     int closestIntersectionIndex;
     Intersection closestIntersection;
@@ -36,11 +37,11 @@ vec3 Raytracer::pathTraceRay(Ray& ray, int depth, vec3& color, float weight, int
     if (findClosestIntersection(ray, closestIntersectionIndex, closestIntersection)) {
 
         Primitive intersectedObject = scene->primitiveList[closestIntersectionIndex];
-        Intersection lightIntersect;
+        Intersection surfaceIntersection;
 
         // Move intersection from object to world space
-        lightIntersect.position = closestIntersection.position * intersectedObject.transformation;
-        lightIntersect.normal   = glm::normalize(closestIntersection.normal * intersectedObject.inverseTranspose);
+        surfaceIntersection.position = closestIntersection.position * intersectedObject.transformation;
+        surfaceIntersection.normal   = glm::normalize(closestIntersection.normal * intersectedObject.inverseTranspose);
         
         // Russian roulette
         // We'll sum the reflectance coefficients of the material after first weighting them according to the luminance
@@ -78,11 +79,11 @@ vec3 Raytracer::pathTraceRay(Ray& ray, int depth, vec3& color, float weight, int
             switch (intersectedObject.material->type) {
                 case LAMBERTIAN: {
                     if (scene->directLighting) {
-                        color += directLighting(ray, lightIntersect, intersectedObject);
+                        color += directLighting(ray, surfaceIntersection, intersectedObject);
                     }
 
                     if (scene->indirectLighting) {
-                        color += indirectDiffuseLighting(lightIntersect, intersectedObject) / p;
+                        color += indirectDiffuseLighting(surfaceIntersection, intersectedObject) / p;
                     }
 
                     break;
@@ -126,7 +127,7 @@ vec3 Raytracer::pathTraceRay(Ray& ray, int depth, vec3& color, float weight, int
 */
             }
         }
-
+/*
         if (scene->directLighting) {
             color += directLighting(ray, lightIntersect, intersectedObject);
         }  
@@ -150,14 +151,14 @@ vec3 Raytracer::pathTraceRay(Ray& ray, int depth, vec3& color, float weight, int
         if (intersectedObject.material->type == LAMBERTIAN) { 
             color += intersectedObject.material->diffuse * glm::dot(lightIntersect->normal, randomRay->direction) * randomColor / p;
         }
-
+*/
     } else {
         // This could be replaced with a skybox in the future
         return vec3(0.0);
     }
 }
 
-bool Raytracer::findClosestIntersection(Ray& ray, int& closestIntersectionIndex, Intersection& closestIntersection)
+bool Raytracer::findClosestIntersection(const Ray& ray, int& closestIntersectionIndex, Intersection& closestIntersection)
 {
     float minimumT = FLT_MAX;
     std::vector<Primitive>::iterator it;
@@ -189,9 +190,49 @@ bool Raytracer::findClosestIntersection(Ray& ray, int& closestIntersectionIndex,
         ++i;
     }
 
+    // Flip transmissive norm?
+
     return didIntersect;
 }
 
+vec3 Raytracer::directLighting(const Ray& ray, const Intersection& surfaceIntersection, 
+                               const Primitive& intersectedObject)
+{
+    std::vector<Primitive>::iterator it;
+    std::vector<AreaLight*>::iterator lit; 
+    Ray shadowRay;
+    Ray tempRay;
+    float tmax;
+
+    vec3 color = vec3(0.0f);
+
+    for (lit = scene->areaLightList.begin(); lit < scene->areaLightList.end(); lit++) {
+        // Loop through each object again to see if our light ray intersects with anything
+
+
+        int k = 0;
+        for (it = scene->primitiveList.begin(); it < scene->primitiveList.end(); it++, k++) {
+            // Transform shadowRay into object space
+            tempRay.position = shadowRay.position * it->inverseTransformation;
+            tempRay.direction = shadowRay.direction * it->inverseTransformation;
+
+            if (it->doesRayIntersect(tempRay, tmax)) {
+                //visibility = 0.0f;
+                break;
+            }
+        }
+    }
+
+    color = glm::clamp(color,0.0f,1.0f);
+    return color;
+}
+
+vec3 Raytracer::indirectDiffuseLighting(const Intersection& surfaceIntersection, const Primitive& intersectedObject)
+{
+    return vec3(0.0f);
+}
+
+/*
 void Raytracer::traceRay(Ray* ray, int depth, vec3& color, float weight, int bounce, float rayRIndex)
 {
     int intersectPrimIndex = -1;
@@ -437,7 +478,7 @@ vec3 Raytracer::directLighting(Ray* ray, Intersection* lightIntersect, Primitive
 
                         L = glm::normalize(pos - lightIntersect->position);
                         shadowRay->direction = glm::normalize(pos - lightIntersect->position);
-                        shadowRay->position = lightIntersect->position + 0.001 * shadowRay->direction;
+                        shadowRay->position = lightIntersect->position + 0.001 * shadowRay->direction
                         float tmax = glm::length(pos - lightIntersect->position);
 
                         for (it = scene->primitiveList.begin(); it < scene->primitiveList.end(); it++) {
@@ -471,7 +512,7 @@ vec3 Raytracer::directLighting(Ray* ray, Intersection* lightIntersect, Primitive
                             float r;
                             r = glm::length(pos - lightIntersect->position);
                             attenuation = (1.0/(scene->attenuation[0] + scene->attenuation[1]*r + scene->attenuation[1]*r*r));
-                            color += (phong + lambert)*visAdd*lit->color*attenuation*intersectedObject->material->alpha;*/
+                            color += (phong + lambert)*visAdd*lit->color*attenuation*intersectedObject->material->alpha;
                         }
                     }
                 }
@@ -514,3 +555,4 @@ vec3 Raytracer::directLighting(Ray* ray, Intersection* lightIntersect, Primitive
     delete tempRay;
     return color;
 }
+*/

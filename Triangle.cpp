@@ -82,7 +82,7 @@ bool Triangle::doesIntersect(Ray* ray, float tmax)
     return false;
 }
 
-int Triangle::getIntersectionPoint(Ray& ray, Intersection& intersection)
+int Triangle::getIntersectionPoint(const Ray& ray, Intersection& intersection)
 {
     vec3 dir = vec3(ray.direction[0],ray.direction[1],ray.direction[2]);
     vec3 pos = vec3(ray.position[0],ray.position[1],ray.position[2]);
@@ -126,6 +126,42 @@ int Triangle::getIntersectionPoint(Ray& ray, Intersection& intersection)
         }
     }
 }
+
+bool Triangle::doesRayIntersect(const Ray& ray, const float tmax)
+{
+    vec3 dir = vec3(ray.direction[0],ray.direction[1],ray.direction[2]);
+    vec3 pos = vec3(ray.position[0],ray.position[1],ray.position[2]);
+
+    float denom = glm::dot(dir,faceNormal);
+
+    if (denom == 0.0) {
+        return false;
+    } else {
+        float t = (glm::dot(vertexArray[1],faceNormal) - glm::dot(pos,faceNormal)) / denom;
+        vec3 p = pos + dir * t;
+
+        vec3 u = p - vertexArray[1];             
+        vec3 v = vertexArray[0] - vertexArray[1];
+        vec3 w = vertexArray[2] - vertexArray[1];
+
+        float ww = glm::dot(w,w);
+        float wv = glm::dot(w,v);
+        float uv = glm::dot(u,v);
+        float uw = glm::dot(u,w);
+        float vv = glm::dot(v,v);
+
+        float beta = (ww*uv - wv*uw) / (vv*ww - wv*wv);
+        float gamma = (vv*uw - wv*uv) / (vv*ww - wv*wv);
+
+        if (beta >= 0 && gamma >= 0 && (beta + gamma <= 1) && t >= 0.0 && t <= tmax) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    return false;
+}
+
 
 int Triangle::intersectionPoint(Ray* ray, Intersection* intersection)
 {

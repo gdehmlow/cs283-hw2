@@ -129,7 +129,7 @@ dvec3 Raytracer::pathTraceRay(const Ray& ray, int depth, double weight, int boun
             reflectedRay.position  = surfaceIntersection.position + reflectedRay.direction * 0.001;
             reflectedRay.t = ray.t;
             color += pathTraceRay(reflectedRay, ++depth, weight * glm::dot(intersectedObject.material->specular, dvec3(0.333)), bounce) 
-                     * weight;
+                     * intersectedObject.material->specular * weight * survivorBonus;
         }
 
         else if (intersectedObject.material->type == EMISSIVE) {
@@ -239,22 +239,28 @@ dvec3 Raytracer::directLighting(const Ray& ray, const Intersection& surfaceInter
 
 void Raytracer::sampleUniformHemisphere(Ray& ray, const Intersection& surfaceIntersection) 
 {
-    double a = rand() / double(RAND_MAX);
-    double b = rand() / double(RAND_MAX);
+    double d = rand() / double(RAND_MAX);
+    double e = rand() / double(RAND_MAX);
 
-    double theta = 2.0 * M_PI * a;
-    double phi = acos(2.0 * b - 1);
+    double theta = 2.0 * M_PI * d;
+    double phi = acos(2.0 * e - 1.0);
 
     dvec3 randomDirection = dvec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
-    dvec3 normal = dvec3(surfaceIntersection.normal.xyz);
 
-    // Since this is uniformly sampled over the sphere, we flip it to stay in the correct hemisphere
-    if (glm::dot(randomDirection, normal) < 0.0) {
-        randomDirection = -randomDirection;
-    }
+    dvec3 normal = dvec3(surfaceIntersection.normal.xyz);
+    double a = rand() / double(RAND_MAX);
+    double b = rand() / double(RAND_MAX);
+    double c = rand() / double(RAND_MAX);
+
+    dvec3 ran = dvec3(a,b,c);
+    dvec3 x = glm::normalize(glm::cross(ran, normal));
+    dvec3 y = glm::normalize(glm::cross(normal, x));
+    dmat3 rotationMatrix = dmat3(x, y, normal);
+    randomDirection = rotationMatrix*randomDirection;
 
     ray.position = surfaceIntersection.position + dvec4(randomDirection,1.0) * 0.001;
     ray.direction = dvec4(randomDirection,1.0);
+
     return;
 }
 
@@ -310,11 +316,6 @@ void Raytracer::sampleSpecularLobe(Ray& ray, const Intersection& surfaceIntersec
     ray.position = surfaceIntersection.position + dvec4(randomDirection,1.0) * 0.001;
     ray.direction = dvec4(randomDirection,1.0);
     return;
-}
-
-dvec3 Raytracer::indirectDiffuseLighting(const Intersection& surfaceIntersection, const Primitive& intersectedObject)
-{        
-    return dvec3(0.0);
 }
 
     ////////////

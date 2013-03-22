@@ -25,7 +25,6 @@ class Raytracer {
         bool findClosestIntersection(const Ray& ray, int& closestIntersectionIndex, Intersection& closestIntersection);
         glm::dvec3 directLighting(const Ray& ray, const Intersection& surfaceIntersection, 
                                   const Primitive& intersectedObject);
-        glm::dvec3 indirectDiffuseLighting(const Intersection& surfaceIntersection, const Primitive& intersectedObject);
         void sampleUniformHemisphere(Ray& ray, const Intersection& surfaceIntersection); 
         void sampleCosineWeightedHemisphere(Ray& ray, const Intersection& surfaceIntersection);
         void sampleSpecularLobe(Ray& ray, const Intersection& surfaceIntersection, const glm::dvec3& reflection, 

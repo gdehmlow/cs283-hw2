@@ -41,11 +41,12 @@ void Camera::setWidthAndHeight(int const width, int const height)
     tanfovx = tanfovy * w2 / h2;
 }
 
-void Camera::generateRay(Ray& ray, const double x, const double y)
+void Camera::generateRay(Ray& ray, const double x, const double y, const double t)
 {
     double alpha = tanfovx * (x + 0.5f - w2) / w2;
     double beta = tanfovy * (y + 0.5f - h2) / h2;
     vec3 tempVec = glm::normalize(alpha*u + beta*v - w);
     ray.position = vec4(eye,1);
     ray.direction = vec4(tempVec,0);
+    ray.t = t;
 }

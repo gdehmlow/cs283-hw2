@@ -15,7 +15,7 @@ class Camera {
         Camera();
         void init(double* values);
         void setWidthAndHeight(const int width, const int height);
-        void generateRay(Ray& ray, const double x, const double y);
+        void generateRay(Ray& ray, const double x, const double y, const double t);
 
     private:
         glm::dvec3 eye;

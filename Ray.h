@@ -10,6 +10,7 @@
 typedef struct _Ray {
     glm::dvec4 position;
     glm::dvec4 direction;
+    double t;
 } Ray;
 
 #endif

@@ -55,6 +55,7 @@ void Scene::raytrace()
     srand ( time(NULL) );
     int numberOfPixels = screen.getWidth() * screen.getHeight();
     double spp = (double) samplesPerPixel;
+    double invSpp = 1.0 / spp;
     if (traceType == RAY) {
         cout << "Raytracing\n";
     } else if (traceType == PATH) {
@@ -86,11 +87,13 @@ void Scene::raytrace()
         dvec3 totalColor = dvec3(0.0f);
         int x = i % screen.getWidth();
         int y = i / screen.getWidth();
+        float t = 0;
         Sample sample;
         Sampler sampler = Sampler(x, y, samplesPerPixel, samplerType);
         while (sampler.hasSamples() != false) {
             sample = sampler.getSample();
-            camera.generateRay(ray,sample.x,sample.y);
+            camera.generateRay(ray,sample.x,sample.y, t);
+            t += invSpp;
             color = tracer.pathTraceRay(ray, 0, 1.0f, 0);
             totalColor += color;
         }
@@ -208,9 +211,10 @@ void Scene::parseFile(const char* filename)
 
                 // Geometry
                 else if (cmd == "sphere") {
-                    validinput = readvals(s,4,values);
+                    validinput = readvals(s,7,values);
                     if (validinput) {
                         Sphere* sphere = new Sphere(values[0],values[1],values[2],values[3]);
+                        sphere->setEndPosition(values[4],values[5],values[6]);
                         Primitive prim(sphere);
                         prim.setAmbient(ambient);
                         prim.setMaterial(tempMaterial);

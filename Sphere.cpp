@@ -15,6 +15,7 @@ Sphere::Sphere(double x, double y, double z, double radius)
 {
     this->posit = vec3(x,y,z);
     this->radius = radius;
+    this->isMoving = false;
 }
 
 Sphere::~Sphere()
@@ -23,7 +24,10 @@ Sphere::~Sphere()
 
 void Sphere::setEndPosition(double x, double y, double z)
 {
-    this->endposit = vec3(x,y,z);
+    if (x != this->posit.x || y != this->posit.y || z != this->posit.z) {
+        this->endposit = vec3(x,y,z);
+        this->isMoving = true;
+    }
 }
 
 bool Sphere::doesIntersect(Ray* ray, double tmax)

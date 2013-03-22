@@ -20,24 +20,23 @@ class Primitive {
         Primitive(Shape* shape);
         ~Primitive();
 
-        int getIntersectionPoint(const Ray& ray, Intersection& intersection);
-        bool doesRayIntersect(const Ray& ray, const float tmax);
+        int getIntersectionPoint(const Ray& ray, Intersection& intersection, const double dt);
+        bool doesRayIntersect(const Ray& ray, const float tmax, const double dt);
 
         // Delete soon
         int intersectionPoint(Ray* ray, Intersection* intersection);
         bool doesIntersect(Ray* ray, float tmax);
 
-        void setAmbient(glm::vec3& ambient);
+        void setAmbient(const glm::dvec3& ambient);
         void setMaterial(const Material& material);
-        void setTransformation(glm::mat4& transformation);
-        AABB* getAABB();
+        void setTransformation(glm::dmat4& transformation);
 
         Shape* shape;
         Material* material;
-        glm::vec3 ambient;
-        glm::mat4 transformation;
-        glm::mat4 inverseTransformation;
-        glm::mat4 inverseTranspose;
+        glm::dvec3 ambient;
+        glm::dmat4 transformation;
+        glm::dmat4 inverseTransformation;
+        glm::dmat4 inverseTranspose;
 };
 
 #endif

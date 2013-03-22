@@ -51,7 +51,7 @@ Sample Sampler::getSample()
 
     currentSubPixelCount++;
 
-    if (currentSubPixelCount > samplesPerPixel - 2) {
+    if (currentSubPixelCount >= samplesPerPixel) {
         currentSubPixelCount = 0;
         hasSamps = false;
     }

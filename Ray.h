@@ -8,8 +8,8 @@
 #include <glm/glm.hpp>
 
 typedef struct _Ray {
-    glm::vec4 position;
-    glm::vec4 direction;
+    glm::dvec4 position;
+    glm::dvec4 direction;
 } Ray;
 
 #endif

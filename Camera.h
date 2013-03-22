@@ -13,23 +13,23 @@
 class Camera {
     public:
         Camera();
-        void init(float* values);
+        void init(double* values);
         void setWidthAndHeight(const int width, const int height);
-        void generateRay(Ray& ray, const float x, const float y);
+        void generateRay(Ray& ray, const double x, const double y);
 
     private:
-        glm::vec3 eye;
-        glm::vec3 w;
-        glm::vec3 u;
-        glm::vec3 v;
+        glm::dvec3 eye;
+        glm::dvec3 w;
+        glm::dvec3 u;
+        glm::dvec3 v;
 
-        float fovy;
-        float tanfovy;
-        float tanfovx;
-        float width;
-        float w2;
-        float height;
-        float h2;
+        double fovy;
+        double tanfovy;
+        double tanfovx;
+        double width;
+        double w2;
+        double height;
+        double h2;
 };
 
 #endif

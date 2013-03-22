@@ -9,10 +9,10 @@
 #include <algorithm>
 #include "Light.h"
 
-typedef glm::vec3 vec3;
-typedef glm::vec4 vec4;
+typedef glm::dvec3 dvec3;
+typedef glm::dvec4 dvec4;
 
-QuadLight::QuadLight(vec3 position, vec3 upVec, vec3 rightVec, vec3 color)
+QuadLight::QuadLight(dvec3 position, dvec3 upVec, dvec3 rightVec, dvec3 color)
 {
     this->position  = position;
     this->upVec     = upVec;
@@ -38,25 +38,22 @@ QuadLight::~QuadLight()
 
     Note: the visibility term is calculated in the DirectLighting routine
 */
-void QuadLight::getSample(const vec3& position, const vec3& normal, 
-                                vec3& lightIntensity, vec3& incidentRay)
+void QuadLight::getSample(const dvec3& position, const dvec3& normal, 
+                                dvec3& lightIntensity, dvec3& incidentRay)
 {
-    // Generates random point on the light
-    float u = rand() / double(RAND_MAX);
-    float v = rand() / double(RAND_MAX);
-    vec3 positionOnLight = this->position + this->upVec*u + this->rightVec*v;
-
-    // Creates incidentRay for point on surface
+    double u = rand() / double(RAND_MAX);
+    double v = rand() / double(RAND_MAX);
+    dvec3 positionOnLight = this->position + this->upVec*u + this->rightVec*v;
     incidentRay = positionOnLight - position;
-    float incidentLength = glm::length(incidentRay);
+    double incidentLength = glm::length(incidentRay);
 
     // Calculates G(x,x'_i) = cos(θ)cos(θ'_i)/|x-x'_i|^2
-    float g = std::max(glm::dot(incidentRay,normal) / incidentLength,0.0f) * 
-              std::max(glm::dot(-incidentRay,this->normal) / incidentLength,0.0f);// /
-              //std::pow(incidentLength, 2.0f);
+    double g = std::max(glm::dot(incidentRay,normal) / incidentLength,0.0) * 
+               std::max(glm::dot(-incidentRay,this->normal) / incidentLength,0.0) /
+               std::pow(incidentLength, 2.0);
 
-    //std::cout << std::max(glm::dot(incidentRay,normal),0.0f) / incidentLength << "\n";
-    //std::cout << std::max(glm::dot(incidentRay,this->normal),0.0f) / incidentLength << "\n";
+    //std::cout << std::max(glm::dot(incidentRay,normal),0.0) / incidentLength << "\n";
+    //std::cout << std::max(glm::dot(-incidentRay,this->normal),0.0) / incidentLength << "\n";
     //std::cout << "<" << this->color.x << ", " << this->color.y << ", " << this->color.z << ">, " << g << ", " << area << "\n";
 
     lightIntensity = this->color * g * area;

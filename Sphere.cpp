@@ -6,12 +6,12 @@
 #include <math.h>
 #include "Sphere.h"
 
-typedef glm::mat3 mat3;
-typedef glm::mat4 mat4; 
-typedef glm::vec3 vec3; 
-typedef glm::vec4 vec4; 
+typedef glm::dmat3 mat3;
+typedef glm::dmat4 mat4; 
+typedef glm::dvec3 vec3; 
+typedef glm::dvec4 vec4; 
 
-Sphere::Sphere(float x, float y, float z, float radius)
+Sphere::Sphere(double x, double y, double z, double radius)
 {
     this->posit = vec3(x,y,z);
     this->radius = radius;
@@ -19,24 +19,28 @@ Sphere::Sphere(float x, float y, float z, float radius)
 
 Sphere::~Sphere()
 {
-    //delete aabb;
 }
 
-bool Sphere::doesIntersect(Ray* ray, float tmax)
+void Sphere::setEndPosition(double x, double y, double z)
+{
+    this->endposit = vec3(x,y,z);
+}
+
+bool Sphere::doesIntersect(Ray* ray, double tmax)
 {
     vec3 dir = vec3(ray->direction[0],ray->direction[1],ray->direction[2]);
     vec3 pos = vec3(ray->position[0],ray->position[1],ray->position[2]);
-    float A = glm::dot(dir,dir);
-    float B = 2 * glm::dot(dir, (pos - this->posit));
-    float C = glm::dot(pos - this->posit, pos - this->posit) - radius*radius;
-    float disc = B*B - 4*A*C;
-    float t;
+    double A = glm::dot(dir,dir);
+    double B = 2 * glm::dot(dir, (pos - this->posit));
+    double C = glm::dot(pos - this->posit, pos - this->posit) - radius*radius;
+    double disc = B*B - 4*A*C;
+    double t;
     
     if (disc < 0) {
         return false;
     } else {
-        float q0 = (-B + sqrt(disc)) / (2*A);
-        float q1 = (-B - sqrt(disc)) / (2*A);
+        double q0 = (-B + sqrt(disc)) / (2*A);
+        double q1 = (-B - sqrt(disc)) / (2*A);
 
         if (q0 > 0 && q1 > 0) {
             t = q0 >= q1 ? q1 : q0; // pick the minimum
@@ -53,22 +57,29 @@ bool Sphere::doesIntersect(Ray* ray, float tmax)
     return true;
 }
 
-int Sphere::getIntersectionPoint(const Ray& ray, Intersection& intersection)
+int Sphere::getIntersectionPoint(const Ray& ray, Intersection& intersection, const double dt)
 {
+    vec3 currentPosition;
+    if (isMoving) {
+        currentPosition = this->posit*(1.0 - dt) + this->endposit*(dt);
+    } else {
+        currentPosition = this->posit;
+    }
+    
     vec3 dir = vec3(ray.direction[0],ray.direction[1],ray.direction[2]);
     vec3 pos = vec3(ray.position[0],ray.position[1],ray.position[2]);
-    float A = glm::dot(dir,dir);
-    float B = 2 * glm::dot(dir, (pos - this->posit));
-    float C = glm::dot(pos - this->posit, pos - this->posit) - radius*radius;
-    float disc = B*B - 4*A*C;
+    double A = glm::dot(dir,dir);
+    double B = 2 * glm::dot(dir, (pos - currentPosition));
+    double C = glm::dot(pos - currentPosition, pos - currentPosition) - radius*radius;
+    double disc = B*B - 4*A*C;
     int ret = 1;
 
     if (disc < 0) {
         return 0;    
     } else {
-        float q0 = (-B + sqrt(disc)) / (2*A);
-        float q1 = (-B - sqrt(disc)) / (2*A);
-        float t;
+        double q0 = (-B + sqrt(disc)) / (2*A);
+        double q1 = (-B - sqrt(disc)) / (2*A);
+        double t;
         if (q0 > 0 && q1 > 0) {
             t = q0 >= q1 ? q1 : q0; // pick the minimum
         } else if (q0 == q1) {
@@ -78,7 +89,7 @@ int Sphere::getIntersectionPoint(const Ray& ray, Intersection& intersection)
             ret = -1; // inside sphere!
         }
         vec3 position = pos + dir*t;
-        vec3 normal = glm::normalize(position - this->posit);
+        vec3 normal = glm::normalize(position - currentPosition);
 
         intersection.position = vec4(position,1);
         intersection.normal = vec4(normal,0);
@@ -87,21 +98,28 @@ int Sphere::getIntersectionPoint(const Ray& ray, Intersection& intersection)
     return ret;
 }
 
-bool Sphere::doesRayIntersect(const Ray& ray, const float tmax)
+bool Sphere::doesRayIntersect(const Ray& ray, const double tmax, const double dt)
 {
+    vec3 currentPosition;
+    if (isMoving) {
+        currentPosition = this->posit*(1.0 - dt) + this->endposit*(dt);
+    } else {
+        currentPosition = this->posit;
+    }
+
     vec3 dir = vec3(ray.direction[0],ray.direction[1],ray.direction[2]);
     vec3 pos = vec3(ray.position[0],ray.position[1],ray.position[2]);
-    float A = glm::dot(dir,dir);
-    float B = 2 * glm::dot(dir, (pos - this->posit));
-    float C = glm::dot(pos - this->posit, pos - this->posit) - radius*radius;
-    float disc = B*B - 4*A*C;
-    float t;
+    double A = glm::dot(dir,dir);
+    double B = 2 * glm::dot(dir, (pos - currentPosition));
+    double C = glm::dot(pos - currentPosition, pos - currentPosition) - radius*radius;
+    double disc = B*B - 4*A*C;
+    double t;
     
     if (disc < 0) {
         return false;
     } else {
-        float q0 = (-B + sqrt(disc)) / (2*A);
-        float q1 = (-B - sqrt(disc)) / (2*A);
+        double q0 = (-B + sqrt(disc)) / (2*A);
+        double q1 = (-B - sqrt(disc)) / (2*A);
 
         if (q0 > 0 && q1 > 0) {
             t = q0 >= q1 ? q1 : q0; // pick the minimum
@@ -122,18 +140,18 @@ int Sphere::intersectionPoint(Ray* ray, Intersection* intersection)
 {
     vec3 dir = vec3(ray->direction[0],ray->direction[1],ray->direction[2]);
     vec3 pos = vec3(ray->position[0],ray->position[1],ray->position[2]);
-    float A = glm::dot(dir,dir);
-    float B = 2 * glm::dot(dir, (pos - this->posit));
-    float C = glm::dot(pos - this->posit, pos - this->posit) - radius*radius;
-    float disc = B*B - 4*A*C;
+    double A = glm::dot(dir,dir);
+    double B = 2 * glm::dot(dir, (pos - this->posit));
+    double C = glm::dot(pos - this->posit, pos - this->posit) - radius*radius;
+    double disc = B*B - 4*A*C;
     int ret = 1;
 
     if (disc < 0) {
         return 0;    
     } else {
-        float q0 = (-B + sqrt(disc)) / (2*A);
-        float q1 = (-B - sqrt(disc)) / (2*A);
-        float t;
+        double q0 = (-B + sqrt(disc)) / (2*A);
+        double q1 = (-B - sqrt(disc)) / (2*A);
+        double t;
         if (q0 > 0 && q1 > 0) {
             t = q0 >= q1 ? q1 : q0; // pick the minimum
         } else if (q0 == q1) {
@@ -150,15 +168,4 @@ int Sphere::intersectionPoint(Ray* ray, Intersection* intersection)
         intersection->t = t;
     }
     return ret;
-}
-
-void Sphere::createAABB(glm::mat3& transformation)
-{
-    this->aabb = new AABB();
-    this->aabb->minimum = (this->posit - this->radius)*transformation;
-    this->aabb->maximum = (this->posit + this->radius)*transformation;
-}
-
-AABB* Sphere::getAABB() {
-    return aabb;
 }

@@ -15,17 +15,18 @@ Screen::~Screen()
     delete[] pixelArray;
 }
 
-void Screen::init(int width, int height)
+void Screen::init(const int width, const int height)
 {
     this->width = width;
     this->height = height;
     pixelArray = new Byte[width*height*3];
 }
 
-void Screen::writePixel(glm::vec3& color, int x, int y)
+void Screen::writePixel(const glm::dvec3& color, const int x, const int y)
 {
+    glm::dvec3 newColor = glm::clamp(color, 0.0, 1.0);
     for (int i = 0; i < 3; i++) {
-        pixelArray[(width*y+x)*3 + 2 - i] = (Byte) (color[i]*255.0);
+        pixelArray[(width*y+x)*3 + 2 - i] = (Byte) (newColor[i]*255.0);
     }
 }
 

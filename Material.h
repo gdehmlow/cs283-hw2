@@ -14,15 +14,15 @@ enum MaterialType { LAMBERTIAN, GLOSSY, TRANSMISSIVE, REFLECTIVE, EMISSIVE };
 typedef struct _Material {
 	MaterialType type;
 
-    glm::vec3 diffuse;
-    glm::vec3 specular;
-    glm::vec3 reflection;
-    glm::vec3 transmission;
-    glm::vec3 emission;
+    glm::dvec3 diffuse;
+    glm::dvec3 specular;
+    glm::dvec3 reflection;
+    glm::dvec3 transmission;
+    glm::dvec3 emission;
 
-    float shininess;
-    float rindex;
-    float alpha;
+    double shininess;
+    double rindex;
+    double alpha;
 } Material;
 
 #endif

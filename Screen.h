@@ -15,8 +15,8 @@ class Screen {
     public:
         Screen();
         ~Screen();
-        void init(int width, int height);
-        void writePixel(glm::vec3& color, int x, int y);
+        void init(const int width, const int height);
+        void writePixel(const glm::dvec3& color, const int x, const int y);
         void saveScreenshot(const char* outputFilename);
 
         int getWidth();

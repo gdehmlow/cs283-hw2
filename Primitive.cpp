@@ -20,18 +20,18 @@ int Primitive::intersectionPoint(Ray* ray, Intersection* intersection)
     return shape->intersectionPoint(ray, intersection);
 }
 
-int Primitive::getIntersectionPoint(const Ray& ray, Intersection& intersection)
+int Primitive::getIntersectionPoint(const Ray& ray, Intersection& intersection, const double dt)
 {
-    return shape->getIntersectionPoint(ray, intersection);
+    return shape->getIntersectionPoint(ray, intersection, dt);
 }
 
-bool Primitive::doesRayIntersect(const Ray& ray, const float tmax)
+bool Primitive::doesRayIntersect(const Ray& ray, const float tmax, const double dt)
 {
     // This seems hacky.
     if (this->material->type == EMISSIVE) {
         return false;
     } else {
-        return shape->doesRayIntersect(ray, tmax);
+        return shape->doesRayIntersect(ray, tmax, dt);
     }
 }
 
@@ -45,7 +45,7 @@ bool Primitive::doesIntersect(Ray* ray, float tmax)
     }
 }
 
-void Primitive::setAmbient(glm::vec3& ambient)
+void Primitive::setAmbient(const glm::dvec3& ambient)
 {
     this->ambient = ambient;
 }
@@ -61,7 +61,7 @@ void Primitive::setMaterial(const Material& material)
     this->material->type        = material.type;
 }
 
-void Primitive::setTransformation(glm::mat4& transformation)
+void Primitive::setTransformation(glm::dmat4& transformation)
 {
     this->transformation = transformation;
     this->inverseTransformation = glm::inverse(transformation);
@@ -72,10 +72,4 @@ void Primitive::setTransformation(glm::mat4& transformation)
             this->inverseTranspose[i][k] = this->inverseTransformation[k][i];
         }
     }
-    this->shape->createAABB(tempTransformation);
-}
-
-AABB* Primitive::getAABB() 
-{
-    return this->shape->getAABB();
 }

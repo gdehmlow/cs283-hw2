@@ -14,19 +14,22 @@
 
 class Sphere : public Shape {
     public:
-        Sphere(float x, float y, float z, float radius);
+        Sphere(double x, double y, double z, double radius);
         ~Sphere();
+
+        void setEndPosition(double x, double y, double z);
         
-        bool doesIntersect(Ray* ray, float tmax);
+        int getIntersectionPoint(const Ray& ray, Intersection& intersection, const double dt);
+        bool doesRayIntersect(const Ray& ray, const double tmax, const double dt);
+
+        bool doesIntersect(Ray* ray, double tmax);
         int intersectionPoint(Ray* ray, Intersection* intersection);
-        int getIntersectionPoint(const Ray& ray, Intersection& intersection);
-        bool doesRayIntersect(const Ray& ray, const float tmax);
-        void createAABB(glm::mat3& transformation);
-        AABB* getAABB();
+
     private:
-        AABB* aabb;
-        glm::vec3 posit;
-        float radius;
+        glm::dvec3 posit;
+        glm::dvec3 endposit;
+        double radius;
+        bool isMoving;
 };
 
 #endif

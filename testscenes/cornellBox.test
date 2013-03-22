@@ -29,13 +29,13 @@ diffuse 0 0 0
 
 attenuation 1 0 0
 
-area rect -.75 1.99 -1.5 0 0 -1.25 1.5 0 0 4 4 4 3
+area rect -.75 1.99 -1.5 0 0 -1.25 1.5 0 0 15 15 15 3
 #point 0 1.8 0 1.0 1.0 1.0
 
 #white walls
 material lambertian
 pushTransform
-diffuse 0.7 0.7 0.7
+diffuse 0.9 0.9 0.9
 scale 2 2 4
 #back
 tri 2 1 0
@@ -70,16 +70,17 @@ tri 5 2 6
 popTransform
 
 #sphere
-diffuse 0.7 0.7 0.7
-specular 0.1 0.1 0.1
-material lambertian
+diffuse 0.6 0.7 0.6
+#material lambertian
+specular 0.3 0.7 0.3
+shininess 100
+material glossy
 pushTransform
 sphere 1.0 -1.4 -2.5 0.8
 popTransform
 
 #sphere
-diffuse 0.7 0.7 0.7
-specular 0.1 0.1 0.1
+diffuse 0.9 0.9 0.9
 material lambertian
 pushTransform
 sphere -1.1 -1.4 -3 0.6

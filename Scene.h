@@ -21,7 +21,6 @@
 #include "Raytracer.h"
 #include "Primitive.h"
 #include "Light.h"
-#include "AABB.h"
 
 enum TraceType { RAY, PATH };
 enum SamplingType { UNIFORM, IMPORTANCE };
@@ -35,10 +34,9 @@ class Scene {
 
     private:
         void raytrace();
-        bool readvals(std::stringstream &s, const int numvals, float* values);
+        bool readvals(std::stringstream &s, const int numvals, double* values);
         void parseFile(const char* filename);
-        void rightMultiply(const glm::mat4& M, std::stack<glm::mat4>& transfstack);
-        void createGrid();
+        void rightMultiply(const glm::dmat4& M, std::stack<glm::dmat4>& transfstack);
 
         Camera camera;
         Screen screen;
@@ -46,17 +44,10 @@ class Scene {
         std::vector<Primitive> primitiveList;
         std::vector<Light> lightList;
         std::vector<AreaLight*> areaLightList;
-        glm::vec3 attenuation;
-        glm::vec3 ambient;
+        glm::dvec3 attenuation;
+        glm::dvec3 ambient;
         std::string outputFilename;
-        std::stack<glm::mat4> transfstack; 
-
-        // AABB related variables
-        glm::vec3 gridStart;
-        glm::vec3 gridEnd;
-        int gridSize;
-        std::vector<std::vector<int> > grid;
-        AABB* mommaBox;
+        std::stack<glm::dmat4> transfstack; 
 
         // Rendering settings
         int maxDepth;

@@ -7,8 +7,8 @@
 
 typedef glm::mat3 mat3;
 typedef glm::mat4 mat4; 
-typedef glm::vec3 vec3; 
-typedef glm::vec4 vec4; 
+typedef glm::dvec3 vec3; 
+typedef glm::dvec4 vec4; 
 
 Camera::Camera()
 {
@@ -18,7 +18,7 @@ Camera::Camera()
     h2 = 480.0;
 }
 
-void Camera::init(float* values)
+void Camera::init(double* values)
 {
     eye = vec3(values[0],values[1],values[2]);
     vec3 lookAt = vec3(values[3],values[4],values[5]);
@@ -36,15 +36,15 @@ void Camera::setWidthAndHeight(int const width, int const height)
 {
     this->width = width;
     this->height = height;
-    this->w2 = (float)width/2.0;
-    this->h2 = (float)height/2.0;
+    this->w2 = (double)width/2.0;
+    this->h2 = (double)height/2.0;
     tanfovx = tanfovy * w2 / h2;
 }
 
-void Camera::generateRay(Ray& ray, const float x, const float y)
+void Camera::generateRay(Ray& ray, const double x, const double y)
 {
-    float alpha = tanfovx * (x + 0.5f - w2) / w2;
-    float beta = tanfovy * (y + 0.5f - h2) / h2;
+    double alpha = tanfovx * (x + 0.5f - w2) / w2;
+    double beta = tanfovy * (y + 0.5f - h2) / h2;
     vec3 tempVec = glm::normalize(alpha*u + beta*v - w);
     ray.position = vec4(eye,1);
     ray.direction = vec4(tempVec,0);

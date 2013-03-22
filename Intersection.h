@@ -10,8 +10,8 @@
 #include <glm/glm.hpp>
 
 typedef struct _Intersection {
-    glm::vec4 position;
-    glm::vec4 normal;
+    glm::dvec4 position;
+    glm::dvec4 normal;
     float t;
 } Intersection;
 

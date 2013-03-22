@@ -13,14 +13,14 @@ enum AreaType { RECT };
 // Raytracing //
 
 typedef struct _Light {
-    glm::vec4 posdir;
-    glm::vec3 color;
+    glm::dvec4 posdir;
+    glm::dvec3 color;
     LightType type;
 
     AreaType areaType;
     int numSamples; // Per square side! So numSamples = 3 -> 9 samples taken. 
-    glm::vec4 upStep;
-    glm::vec4 rightStep;
+    glm::dvec4 upStep;
+    glm::dvec4 rightStep;
 } Light;
 
 
@@ -28,8 +28,8 @@ typedef struct _Light {
 
 class AreaLight {
     public:
-        virtual void getSample(const glm::vec3& position, const glm::vec3& normal, glm::vec3& lightIntensity, 
-                                     glm::vec3& incidentRay) = 0;
+        virtual void getSample(const glm::dvec3& position, const glm::dvec3& normal, glm::dvec3& lightIntensity, 
+                                     glm::dvec3& incidentRay) = 0;
 };
 
 /*
@@ -45,18 +45,17 @@ class AreaLight {
 
 class QuadLight : public AreaLight {
     public:
-        QuadLight(glm::vec3 position, glm::vec3 upVec, 
-                  glm::vec3 rightVec, glm::vec3 color);
+        QuadLight(glm::dvec3 position, glm::dvec3 upVec, glm::dvec3 rightVec, glm::dvec3 color);
         ~QuadLight();
-        void getSample(const glm::vec3& position, const glm::vec3& normal, glm::vec3& lightIntensity, 
-                             glm::vec3& incidentRay);
+        void getSample(const glm::dvec3& position, const glm::dvec3& normal, glm::dvec3& lightIntensity, 
+                             glm::dvec3& incidentRay);
     private:
-        glm::vec3 position;
-        glm::vec3 upVec;
-        glm::vec3 rightVec;
-        glm::vec3 color;
-        float area;
-        glm::vec3 normal;
+        glm::dvec3 position;
+        glm::dvec3 upVec;
+        glm::dvec3 rightVec;
+        glm::dvec3 color;
+        double area;
+        glm::dvec3 normal;
 };
 
 /*

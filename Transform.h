@@ -10,18 +10,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-typedef glm::mat3 mat3;
-typedef glm::mat4 mat4; 
-typedef glm::vec3 vec3; 
-typedef glm::vec4 vec4; 
-
 class Transform {
     public:
     	Transform();
     	virtual ~Transform();
-        static mat4 rotate(const float degrees, const vec3& axis);
-        static mat4 scale(const float &sx, const float &sy, const float &sz); 
-        static mat4 translate(const float &tx, const float &ty, const float &tz);
+        static glm::dmat4 rotate(const double degrees, const glm::dvec3& axis);
+        static glm::dmat4 scale(const double &sx, const double &sy, const double &sz); 
+        static glm::dmat4 translate(const double &tx, const double &ty, const double &tz);
 };
 
 #endif

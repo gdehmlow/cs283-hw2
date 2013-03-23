@@ -15,11 +15,6 @@ Primitive::~Primitive()
 {
 }
 
-int Primitive::intersectionPoint(Ray* ray, Intersection* intersection)
-{
-    return shape->intersectionPoint(ray, intersection);
-}
-
 int Primitive::getIntersectionPoint(const Ray& ray, Intersection& intersection, const double dt)
 {
     return shape->getIntersectionPoint(ray, intersection, dt);
@@ -32,16 +27,6 @@ bool Primitive::doesRayIntersect(const Ray& ray, const float tmax, const double 
         return false;
     } else {
         return shape->doesRayIntersect(ray, tmax, dt);
-    }
-}
-
-bool Primitive::doesIntersect(Ray* ray, float tmax)
-{
-    // So does this XD
-    if (this->material->type == EMISSIVE) {
-        return false;
-    } else {
-        return shape->doesIntersect(ray, tmax);
     }
 }
 

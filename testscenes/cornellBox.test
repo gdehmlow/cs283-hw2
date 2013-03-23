@@ -4,7 +4,7 @@ camera 0 0 1.99 0 0 0 0 1 0 60
 output cornellBox.bmp
 
 maxdepth 10
-samplesperpixel 1000
+samplesperpixel 10
 sampling random
 direct on
 indirect on

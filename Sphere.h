@@ -18,12 +18,8 @@ class Sphere : public Shape {
         ~Sphere();
 
         void setEndPosition(double x, double y, double z);
-        
         int getIntersectionPoint(const Ray& ray, Intersection& intersection, const double dt);
         bool doesRayIntersect(const Ray& ray, const double tmax, const double dt);
-
-        bool doesIntersect(Ray* ray, double tmax);
-        int intersectionPoint(Ray* ray, Intersection* intersection);
 
     private:
         glm::dvec3 posit;

@@ -32,6 +32,7 @@ Raytracer::~Raytracer()
 ///// PATHTRACER
 dvec3 Raytracer::pathTraceRay(const Ray& ray, int depth, double weight, int bounce)
 {
+    // Grab nearest intersection
     int closestIntersectionIndex;
     Intersection closestIntersection; 
     bool haveAnIntersection = findClosestIntersection(ray, closestIntersectionIndex, closestIntersection);
@@ -39,7 +40,6 @@ dvec3 Raytracer::pathTraceRay(const Ray& ray, int depth, double weight, int boun
     dvec3 color = dvec3(0.0);
 
     if (!haveAnIntersection) {
-        // This could be replaced with a skybox in the future
         return color;
     } else {
 
@@ -56,19 +56,20 @@ dvec3 Raytracer::pathTraceRay(const Ray& ray, int depth, double weight, int boun
         ///// RUSSIAN ROULETTE
         // If the weight of the ray falls below 0.01, 50% chance of terminating ray -> double weight of survivors
         double terminatingP = 0.01;
-        double survivorBonus = 1.0;
+        double vodka = 1.0;
         if (weight <= 0.01) {
             double meteoRandom = rand() / double(RAND_MAX);
             if (meteoRandom > terminatingP) {
                 return color / terminatingP;
             } else {
-                survivorBonus = 1.0 / (1.0 - terminatingP);
+                vodka = 1.0 / (1.0 - terminatingP);
             }
         }
 
+        // Diffuse surfaces get processed normally
         if (intersectedObject.material->type == LAMBERTIAN) {
             if (scene->directLighting) {
-                color += directLighting(ray, surfaceIntersection, intersectedObject) * weight * survivorBonus;
+                color += directLighting(ray, surfaceIntersection, intersectedObject) * weight * vodka;
             }
 
             if (scene->indirectLighting) {
@@ -77,13 +78,13 @@ dvec3 Raytracer::pathTraceRay(const Ray& ray, int depth, double weight, int boun
                 //sampleUniformHemisphere(randomRay, surfaceIntersection); 
                 dvec3 traceColor = pathTraceRay(randomRay, ++depth, weight * glm::dot(intersectedObject.material->diffuse, 
                                                                                       dvec3(0.333)), ++bounce);
-                color += traceColor * intersectedObject.material->diffuse * weight * survivorBonus;
+                color += traceColor * intersectedObject.material->diffuse * weight * vodka;
             }
         }
 
         else if (intersectedObject.material->type == GLOSSY) {            
             if (scene->directLighting) {
-                color += directLighting(ray, surfaceIntersection, intersectedObject) * weight * survivorBonus;
+                color += directLighting(ray, surfaceIntersection, intersectedObject) * weight * vodka;
             }
 
             if (scene->indirectLighting) {
@@ -108,7 +109,7 @@ dvec3 Raytracer::pathTraceRay(const Ray& ray, int depth, double weight, int boun
                     //sampleUniformHemisphere(randomRay, surfaceIntersection); 
                     dvec3 traceColor = pathTraceRay(randomRay, ++depth, weight * glm::dot(intersectedObject.material->diffuse, 
                                                                                           dvec3(0.333)), ++bounce);
-                    color += traceColor * intersectedObject.material->diffuse * weight * survivorBonus / probDiffuse;
+                    color += traceColor * intersectedObject.material->diffuse * weight * vodka / probDiffuse;
                 }
 
                 // Specular
@@ -118,7 +119,7 @@ dvec3 Raytracer::pathTraceRay(const Ray& ray, int depth, double weight, int boun
                     //sampleUniformHemisphere(randomRay, surfaceIntersection); 
                     dvec3 traceColor = pathTraceRay(randomRay, ++depth, weight * glm::dot(intersectedObject.material->specular, 
                                                                                           dvec3(0.333)), ++bounce);
-                    color += traceColor * intersectedObject.material->specular * weight * survivorBonus / (1.0 - probDiffuse);
+                    color += traceColor * intersectedObject.material->specular * weight * vodka / (1.0 - probDiffuse);
                 }
             }
         }
@@ -129,10 +130,12 @@ dvec3 Raytracer::pathTraceRay(const Ray& ray, int depth, double weight, int boun
             reflectedRay.position  = surfaceIntersection.position + reflectedRay.direction * 0.001;
             reflectedRay.t = ray.t;
             color += pathTraceRay(reflectedRay, ++depth, weight * glm::dot(intersectedObject.material->specular, dvec3(0.333)), bounce) 
-                     * intersectedObject.material->specular * weight * survivorBonus;
+                     * intersectedObject.material->specular * weight * vodka;
         }
 
         else if (intersectedObject.material->type == EMISSIVE) {
+            // Since we're sampling the direct lighting at each intersection when it's on, we don't want to factor this into
+            // indirect lighting when the ray randomly hits the light source
             if (bounce > 0 && scene->directLighting) {
                 return dvec3(0.0);
             }
@@ -244,7 +247,6 @@ void Raytracer::sampleUniformHemisphere(Ray& ray, const Intersection& surfaceInt
 
     double theta = 2.0 * M_PI * d;
     double phi = acos(2.0 * e - 1.0);
-
     dvec3 randomDirection = dvec3(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta));
 
     dvec3 normal = dvec3(surfaceIntersection.normal.xyz);

@@ -39,22 +39,22 @@ QuadLight::~QuadLight()
     Note: the visibility term is calculated in the DirectLighting routine
 */
 void QuadLight::getSample(const dvec3& position, const dvec3& normal, 
-                                dvec3& lightIntensity, dvec3& incidentRay)
+                                dvec3& lightIntensity, dvec3& lightRay)
 {
     double u = rand() / double(RAND_MAX);
     double v = rand() / double(RAND_MAX);
     dvec3 positionOnLight = this->position + this->upVec*u + this->rightVec*v;
-    incidentRay = positionOnLight - position;
-    double incidentLength = glm::length(incidentRay);
+    lightRay = positionOnLight - position;
+    double lightRayLength = glm::length(lightRay);
 
     // Calculates G(x,x'_i) = cos(θ)cos(θ'_i)/|x-x'_i|^2
-    double g = std::max(glm::dot(incidentRay,normal) / incidentLength,0.0) * 
-               std::max(glm::dot(-incidentRay,this->normal) / incidentLength,0.0) /
-               std::pow(incidentLength, 2.0);
+    double g = std::max(glm::dot(lightRay,normal) / lightRayLength,0.0) * 
+               std::max(glm::dot(-lightRay,this->normal) / lightRayLength,0.0) /
+               std::pow(lightRayLength, 2.0);
 
-    //std::cout << std::max(glm::dot(incidentRay,normal),0.0) / incidentLength << "\n";
-    //std::cout << std::max(glm::dot(-incidentRay,this->normal),0.0) / incidentLength << "\n";
+    //std::cout << std::max(glm::dot(lightRay,normal),0.0) / lightRayLength << "\n";
+    //std::cout << std::max(glm::dot(-lightRay,this->normal),0.0) / lightRayLength << "\n";
     //std::cout << "<" << this->color.x << ", " << this->color.y << ", " << this->color.z << ">, " << g << ", " << area << "\n";
-
+               
     lightIntensity = this->color * g * area;
 }

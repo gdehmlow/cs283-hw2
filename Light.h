@@ -48,7 +48,7 @@ class QuadLight : public AreaLight {
         QuadLight(glm::dvec3 position, glm::dvec3 upVec, glm::dvec3 rightVec, glm::dvec3 color);
         ~QuadLight();
         void getSample(const glm::dvec3& position, const glm::dvec3& normal, glm::dvec3& lightIntensity, 
-                             glm::dvec3& incidentRay);
+                             glm::dvec3& lightRay);
     private:
         glm::dvec3 position;
         glm::dvec3 upVec;
@@ -76,4 +76,5 @@ class CircleLight : public Arealight {
         float area;
 };
 */
+
 #endif
